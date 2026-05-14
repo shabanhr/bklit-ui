@@ -20,7 +20,7 @@ import { CandlestickChartDemo } from "@/components/docs/candlestick-chart-demo";
 
 ## Usage
 
-The Candlestick Chart uses the same composable API as the Line and Area charts. Provide OHLC data and compose Grid, Candlestick, ChartTooltip, XAxis, and YAxis.
+The Candlestick Chart uses the same composable API as the Line and Area charts. Provide OHLC data and compose Grid, Candlestick, ChartTooltip, and XAxis.
 
 ### Basic Example
 
@@ -31,7 +31,6 @@ import {
   Grid,
   ChartTooltip,
   XAxis,
-  YAxis,
 } from "@bklitui/ui/charts";
 
 const ohlcData = [
@@ -44,14 +43,13 @@ function OHLCChart() {
   return (
     <CandlestickChart
       data={ohlcData}
-      margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+      margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
       style={{ height: 320 }}
     >
       <Grid horizontal />
       <Candlestick fadedOpacity={0.25} />
       <ChartTooltip content={MyOHLCTooltipContent} />
       <XAxis />
-      <YAxis formatValue={(v) => `$${v.toFixed(2)}`} />
     </CandlestickChart>
   );
 }

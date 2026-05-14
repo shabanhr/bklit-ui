@@ -1,9 +1,9 @@
 export const validChartSlugs = [
   "area-chart",
-  "composed-chart",
   "bar-chart",
   "candlestick-chart",
   "choropleth-chart",
+  "composed-chart",
   "funnel-chart",
   "line-chart",
   "live-line-chart",

@@ -15,6 +15,19 @@ import {
 import { ChartProvider, type LineConfig, type Margin } from "./chart-context";
 import { useChartInteraction } from "./use-chart-interaction";
 
+function isDefsComponent(child: ReactElement): boolean {
+  const displayName =
+    (child.type as { displayName?: string })?.displayName ||
+    (child.type as { name?: string })?.name ||
+    "";
+  return (
+    displayName.includes("Gradient") ||
+    displayName.includes("Pattern") ||
+    displayName === "LinearGradient" ||
+    displayName === "RadialGradient"
+  );
+}
+
 /** Markers render after the interaction overlay so they stay clickable. */
 export function isPostOverlayComponent(child: ReactElement): boolean {
   const childType = child.type as {
@@ -53,6 +66,11 @@ export interface TimeSeriesChartInnerProps {
   composedBarSize?: number;
   composedMaxBarSize?: number;
   composedBarGap?: number;
+  composedStacked?: boolean;
+  composedStackOffsets?: Map<number, Map<string, number>>;
+  composedStackGap?: number;
+  /** When set, drives the y-axis max instead of scanning `lines` (e.g. stacked bar totals). */
+  yScaleDomainMax?: number;
 }
 
 export function TimeSeriesChartInner({
@@ -70,6 +88,10 @@ export function TimeSeriesChartInner({
   composedBarSize,
   composedMaxBarSize,
   composedBarGap,
+  composedStacked,
+  composedStackOffsets,
+  composedStackGap,
+  yScaleDomainMax,
 }: TimeSeriesChartInnerProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -109,17 +131,21 @@ export function TimeSeriesChartInner({
 
   const yScale = useMemo(() => {
     let maxValue = 0;
-    for (const line of lines) {
-      for (const d of data) {
-        const value = d[line.dataKey];
-        if (typeof value === "number" && value > maxValue) {
-          maxValue = value;
+    if (yScaleDomainMax != null && yScaleDomainMax > 0) {
+      maxValue = yScaleDomainMax;
+    } else {
+      for (const line of lines) {
+        for (const d of data) {
+          const value = d[line.dataKey];
+          if (typeof value === "number" && value > maxValue) {
+            maxValue = value;
+          }
         }
       }
-    }
 
-    if (maxValue === 0) {
-      maxValue = 100;
+      if (maxValue === 0) {
+        maxValue = 100;
+      }
     }
 
     return scaleLinear({
@@ -127,7 +153,7 @@ export function TimeSeriesChartInner({
       domain: [0, maxValue * 1.1],
       nice: true,
     });
-  }, [innerHeight, data, lines]);
+  }, [innerHeight, data, lines, yScaleDomainMax]);
 
   const dateLabels = useMemo(
     () =>
@@ -171,6 +197,7 @@ export function TimeSeriesChartInner({
     return null;
   }
 
+  const defsChildren: ReactElement[] = [];
   const preOverlayChildren: ReactElement[] = [];
   const postOverlayChildren: ReactElement[] = [];
 
@@ -179,7 +206,9 @@ export function TimeSeriesChartInner({
       return;
     }
 
-    if (isPostOverlayComponent(child)) {
+    if (isDefsComponent(child)) {
+      defsChildren.push(child);
+    } else if (isPostOverlayComponent(child)) {
       postOverlayChildren.push(child);
     } else {
       preOverlayChildren.push(child);
@@ -210,6 +239,9 @@ export function TimeSeriesChartInner({
     composedBarSize,
     composedMaxBarSize,
     composedBarGap,
+    composedStacked,
+    composedStackOffsets,
+    composedStackGap,
   };
 
   return (
@@ -229,6 +261,7 @@ export function TimeSeriesChartInner({
               y={0}
             />
           </clipPath>
+          {defsChildren}
         </defs>
 
         <rect fill="transparent" height={height} width={width} x={0} y={0} />

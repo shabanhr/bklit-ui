@@ -6,6 +6,77 @@ import { chartCssVars, useChart } from "./chart-context";
 
 const BAR_EASING = "cubic-bezier(0.85, 0, 0.15, 1)";
 
+function computeSeriesBarLayout(input: {
+  stacked: boolean;
+  composedStackOffsets: Map<number, Map<string, number>> | undefined;
+  rowIndex: number;
+  dataKey: string;
+  value: number;
+  yScale: (n: number) => number | undefined;
+  innerHeight: number;
+  xCenter: number;
+  barWidth: number;
+  seriesCount: number;
+  gap: number;
+  seriesIndex: number;
+  stackGap: number;
+  isLastSeries: boolean;
+  radius: number;
+}): {
+  barLeft: number;
+  barHeight: number;
+  effectiveRadius: number;
+  valueY: number;
+} {
+  const {
+    stacked,
+    composedStackOffsets,
+    rowIndex,
+    dataKey,
+    value,
+    yScale,
+    innerHeight,
+    xCenter,
+    barWidth,
+    seriesCount,
+    gap,
+    seriesIndex,
+    stackGap,
+    isLastSeries,
+    radius,
+  } = input;
+
+  if (stacked && composedStackOffsets) {
+    const offset = composedStackOffsets.get(rowIndex)?.get(dataKey) ?? 0;
+    const valuePos = yScale(value) ?? 0;
+    let barHeight = innerHeight - valuePos;
+    const offsetY = yScale(offset) ?? innerHeight;
+    const gapOffset = seriesIndex * stackGap;
+    const valueY = offsetY - barHeight - gapOffset;
+    if (!isLastSeries && stackGap > 0) {
+      barHeight = Math.max(0, barHeight - stackGap);
+    }
+    const barLeft = xCenter - barWidth / 2;
+    const applyRounding = stackGap > 0 || isLastSeries;
+    return {
+      barLeft,
+      barHeight,
+      effectiveRadius: applyRounding ? radius : 0,
+      valueY,
+    };
+  }
+
+  const groupWidth =
+    seriesCount * barWidth + (seriesCount > 1 ? (seriesCount - 1) * gap : 0);
+  const valueY = yScale(value) ?? innerHeight;
+  return {
+    barLeft: xCenter - groupWidth / 2 + seriesIndex * (barWidth + gap),
+    barHeight: innerHeight - valueY,
+    effectiveRadius: radius,
+    valueY,
+  };
+}
+
 export interface SeriesBarProps {
   /** Key in data for bar height (y value) */
   dataKey: string;
@@ -13,7 +84,7 @@ export interface SeriesBarProps {
   fill?: string;
   /** Tooltip dot color when fill is gradient/pattern. Default: fill */
   stroke?: string;
-  /** Corner radius for bar top. Default: 4 */
+  /** Corner radius for bar top corners. Default: 0 (square tops, similar to Bar lineCap="butt") */
   radius?: number;
   /** Animate grow from baseline. Default: true */
   animate?: boolean;
@@ -24,7 +95,7 @@ export interface SeriesBarProps {
 export function SeriesBar({
   dataKey,
   fill = chartCssVars.linePrimary,
-  radius = 4,
+  radius = 0,
   animate = true,
   fadedOpacity = 0.3,
 }: SeriesBarProps) {
@@ -43,6 +114,9 @@ export function SeriesBar({
     composedBarSize,
     composedMaxBarSize,
     composedBarGap,
+    composedStacked,
+    composedStackOffsets,
+    composedStackGap,
     tooltipData,
   } = useChart();
 
@@ -60,6 +134,15 @@ export function SeriesBar({
 
   const n = barKeys.length;
   const gap = composedBarGap ?? 4;
+  const stackGap = composedStackGap ?? 0;
+
+  const stacked =
+    Boolean(composedStacked) &&
+    composedStackOffsets != null &&
+    composedBarDataKeys != null &&
+    composedBarDataKeys.length > 0;
+
+  const isLastSeries = seriesIndex === n - 1;
 
   const slot = useMemo(() => {
     if (columnWidth > 0) {
@@ -72,21 +155,22 @@ export function SeriesBar({
   }, [columnWidth, data.length, innerWidth]);
 
   const barWidth = useMemo(() => {
+    const groupCount = stacked ? 1 : n;
     let w =
       composedBarSize ??
-      Math.min(slot * 0.55, composedMaxBarSize ?? Number.POSITIVE_INFINITY);
+      Math.min(slot * 0.88, composedMaxBarSize ?? Number.POSITIVE_INFINITY);
     if (composedMaxBarSize != null) {
       w = Math.min(w, composedMaxBarSize);
     }
-    if (n > 1) {
+    if (groupCount > 1) {
       const maxGroup = slot * 0.92;
-      const needed = n * w + (n - 1) * gap;
+      const needed = groupCount * w + (groupCount - 1) * gap;
       if (needed > maxGroup && maxGroup > 0) {
-        w = Math.max(4, (maxGroup - (n - 1) * gap) / n);
+        w = Math.max(4, (maxGroup - (groupCount - 1) * gap) / groupCount);
       }
     }
     return Math.max(2, w);
-  }, [composedBarSize, composedMaxBarSize, gap, n, slot]);
+  }, [composedBarSize, composedMaxBarSize, gap, n, slot, stacked]);
 
   const totalAnimDuration = animationDuration || 1100;
   const staggerSpread = totalAnimDuration * 0.4;
@@ -112,11 +196,26 @@ export function SeriesBar({
         }
 
         const xCenter = xScale(xAccessor(d)) ?? 0;
-        const groupWidth = n * barWidth + (n > 1 ? (n - 1) * gap : 0);
-        const barLeft =
-          xCenter - groupWidth / 2 + seriesIndex * (barWidth + gap);
-        const valueY = yScale(value) ?? innerHeight;
-        const barHeight = innerHeight - valueY;
+
+        const { barLeft, valueY, barHeight, effectiveRadius } =
+          computeSeriesBarLayout({
+            stacked,
+            composedStackOffsets,
+            rowIndex: i,
+            dataKey,
+            value,
+            yScale,
+            innerHeight,
+            xCenter,
+            barWidth,
+            seriesCount: n,
+            gap,
+            seriesIndex,
+            stackGap,
+            isLastSeries,
+            radius,
+          });
+
         const categoryLabel = String(xAccessor(d).getTime());
         const isFaded = hoveredIndex !== null && hoveredIndex !== i;
 
@@ -133,7 +232,7 @@ export function SeriesBar({
               innerHeight={innerHeight}
               isFaded={isFaded}
               key={`${dataKey}-${categoryLabel}`}
-              radius={radius}
+              radius={effectiveRadius}
               x={barLeft}
               y={valueY}
             />
@@ -146,8 +245,8 @@ export function SeriesBar({
             fill={fill}
             height={barHeight}
             key={`${dataKey}-${categoryLabel}`}
-            rx={radius}
-            ry={radius}
+            rx={effectiveRadius}
+            ry={effectiveRadius}
             transition={{ opacity: { duration: 0.12 } }}
             width={barWidth}
             x={barLeft}

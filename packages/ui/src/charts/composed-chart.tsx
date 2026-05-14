@@ -32,6 +32,10 @@ export interface ComposedChartProps {
   maxBarSize?: number;
   /** Gap between grouped `SeriesBar` series in px. Default: 4 */
   barGap?: number;
+  /** Stack `SeriesBar` segments in child order at each x (line/area are not stacked). */
+  stacked?: boolean;
+  /** Gap in px between stacked segments. Default: 0 */
+  stackGap?: number;
 }
 
 const DEFAULT_MARGIN: Margin = { top: 40, right: 40, bottom: 40, left: 40 };
@@ -120,6 +124,36 @@ function extractComposedSeries(children: ReactNode): {
   return { lines, barDataKeys };
 }
 
+function computeComposedYScaleDomainMax(
+  data: Record<string, unknown>[],
+  lines: LineConfig[],
+  barDataKeys: string[]
+): number | undefined {
+  const barSet = new Set(barDataKeys);
+  let max = 0;
+  for (const d of data) {
+    let barSum = 0;
+    for (const k of barDataKeys) {
+      const v = d[k];
+      if (typeof v === "number") {
+        barSum += v;
+      }
+    }
+    let rowMaxOther = 0;
+    for (const line of lines) {
+      if (barSet.has(line.dataKey)) {
+        continue;
+      }
+      const v = d[line.dataKey];
+      if (typeof v === "number") {
+        rowMaxOther = Math.max(rowMaxOther, v);
+      }
+    }
+    max = Math.max(max, barSum, rowMaxOther);
+  }
+  return max > 0 ? max : undefined;
+}
+
 interface ChartInnerProps {
   width: number;
   height: number;
@@ -132,6 +166,8 @@ interface ChartInnerProps {
   barSize?: number;
   maxBarSize?: number;
   barGap?: number;
+  stacked?: boolean;
+  stackGap?: number;
 }
 
 function ChartInner({
@@ -146,10 +182,44 @@ function ChartInner({
   barSize,
   maxBarSize,
   barGap,
+  stacked = false,
+  stackGap = 0,
 }: ChartInnerProps) {
   const { lines, barDataKeys } = useMemo(
     () => extractComposedSeries(children),
     [children]
+  );
+
+  const composedStackOffsets = useMemo(() => {
+    if (!(stacked && barDataKeys.length > 0)) {
+      return undefined;
+    }
+    const offsets = new Map<number, Map<string, number>>();
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      if (!d) {
+        continue;
+      }
+      const pointOffsets = new Map<string, number>();
+      let cumulative = 0;
+      for (const key of barDataKeys) {
+        pointOffsets.set(key, cumulative);
+        const v = d[key];
+        if (typeof v === "number") {
+          cumulative += v;
+        }
+      }
+      offsets.set(i, pointOffsets);
+    }
+    return offsets;
+  }, [data, barDataKeys, stacked]);
+
+  const yScaleDomainMax = useMemo(
+    () =>
+      stacked && barDataKeys.length > 0
+        ? computeComposedYScaleDomainMax(data, lines, barDataKeys)
+        : undefined,
+    [data, lines, barDataKeys, stacked]
   );
 
   return (
@@ -160,6 +230,9 @@ function ChartInner({
       composedBarGap={barGap}
       composedBarSize={barSize}
       composedMaxBarSize={maxBarSize}
+      composedStacked={stacked}
+      composedStackGap={stackGap}
+      composedStackOffsets={composedStackOffsets}
       containerRef={containerRef}
       data={data}
       height={height}
@@ -167,6 +240,7 @@ function ChartInner({
       margin={margin}
       width={width}
       xDataKey={xDataKey}
+      yScaleDomainMax={yScaleDomainMax}
     >
       {children}
     </TimeSeriesChartInner>
@@ -184,6 +258,8 @@ export function ComposedChart({
   barSize,
   maxBarSize,
   barGap = 4,
+  stacked = false,
+  stackGap = 0,
 }: ComposedChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const margin = { ...DEFAULT_MARGIN, ...marginProp };
@@ -205,6 +281,8 @@ export function ComposedChart({
             height={height}
             margin={margin}
             maxBarSize={maxBarSize}
+            stacked={stacked}
+            stackGap={stackGap}
             width={width}
             xDataKey={xDataKey}
           >

@@ -145,6 +145,12 @@ export interface ChartContextValue {
   composedMaxBarSize?: number;
   /** Gap between grouped `SeriesBar` columns in px. */
   composedBarGap?: number;
+  /** When true, `SeriesBar` segments stack in child order at each x. */
+  composedStacked?: boolean;
+  /** Per-row cumulative offsets for stacked `SeriesBar` (data index → dataKey → offset). */
+  composedStackOffsets?: Map<number, Map<string, number>>;
+  /** Vertical gap in px between stacked `SeriesBar` segments. Default: 0 */
+  composedStackGap?: number;
 }
 
 const ChartContext = createContext<ChartContextValue | null>(null);

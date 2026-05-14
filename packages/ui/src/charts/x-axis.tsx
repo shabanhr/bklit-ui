@@ -5,10 +5,15 @@ import { cn } from "@/lib/utils";
 import { useChart } from "./chart-context";
 
 export interface XAxisProps {
-  /** Number of ticks to show (including first and last). Default: 5 */
+  /** Number of ticks to show (including first and last). Default: 5. Used when `tickMode` is `"domain"`. */
   numTicks?: number;
   /** Width of the date ticker box for fade calculation. Default: 50 */
   tickerHalfWidth?: number;
+  /**
+   * `"domain"` — evenly spaced ticks across the time domain (default).
+   * `"data"` — one label per data row at its x value (better with sparse or monthly bars).
+   */
+  tickMode?: "domain" | "data";
 }
 
 interface XAxisLabelProps {
@@ -66,8 +71,20 @@ function XAxisLabel({
   );
 }
 
-export function XAxis({ numTicks = 5, tickerHalfWidth = 50 }: XAxisProps) {
-  const { xScale, margin, tooltipData, containerRef } = useChart();
+export function XAxis({
+  numTicks = 5,
+  tickerHalfWidth = 50,
+  tickMode = "domain",
+}: XAxisProps) {
+  const {
+    xScale,
+    margin,
+    tooltipData,
+    containerRef,
+    data,
+    xAccessor,
+    dateLabels,
+  } = useChart();
   const [mounted, setMounted] = useState(false);
 
   // Only render on client side after mount
@@ -75,8 +92,21 @@ export function XAxis({ numTicks = 5, tickerHalfWidth = 50 }: XAxisProps) {
     setMounted(true);
   }, []);
 
-  // Generate evenly spaced tick values, always including first and last dates
+  // Generate tick labels: evenly spaced along the domain, or one per data row
   const labelsToShow = useMemo(() => {
+    if (tickMode === "data") {
+      return data.map((d, i) => ({
+        date: xAccessor(d),
+        x: (xScale(xAccessor(d)) ?? 0) + margin.left,
+        label:
+          dateLabels[i] ??
+          xAccessor(d).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          }),
+      }));
+    }
+
     const domain = xScale.domain();
     const startDate = domain[0];
     const endDate = domain[1];
@@ -107,7 +137,7 @@ export function XAxis({ numTicks = 5, tickerHalfWidth = 50 }: XAxisProps) {
         day: "numeric",
       }),
     }));
-  }, [xScale, margin.left, numTicks]);
+  }, [tickMode, data, xAccessor, xScale, margin.left, dateLabels, numTicks]);
 
   const isHovering = tooltipData !== null;
   const crosshairX = tooltipData ? tooltipData.x + margin.left : null;
@@ -128,7 +158,7 @@ export function XAxis({ numTicks = 5, tickerHalfWidth = 50 }: XAxisProps) {
         <XAxisLabel
           crosshairX={crosshairX}
           isHovering={isHovering}
-          key={`${item.label}-${item.x}`}
+          key={`${item.date.getTime()}-${item.x}`}
           label={item.label}
           tickerHalfWidth={tickerHalfWidth}
           x={item.x}
