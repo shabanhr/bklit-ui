@@ -299,9 +299,55 @@
           "target": "components/charts/area-chart.tsx"
         },
         {
+          "path": "src/charts/time-series-chart-shell.tsx",
+          "type": "registry:component",
+          "target": "components/charts/time-series-chart-shell.tsx"
+        },
+        {
           "path": "src/charts/area.tsx",
           "type": "registry:component",
           "target": "components/charts/area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "composed-chart",
+      "type": "registry:component",
+      "title": "Composed Chart",
+      "description": "Time-series chart composing Line, Area, and SeriesBar on one shared scale (Recharts ComposedChart-style)",
+      "registryDependencies": [
+        "https://ui.bklit.com/r/chart-context.json",
+        "https://ui.bklit.com/r/grid.json",
+        "https://ui.bklit.com/r/x-axis.json",
+        "https://ui.bklit.com/r/y-axis.json",
+        "https://ui.bklit.com/r/chart-tooltip.json",
+        "https://ui.bklit.com/r/utils.json",
+        "https://ui.bklit.com/r/line-chart.json",
+        "https://ui.bklit.com/r/area-chart.json"
+      ],
+      "dependencies": [
+        "@visx/curve@4.0.1-alpha.0",
+        "@visx/scale@4.0.1-alpha.0",
+        "@visx/shape@4.0.1-alpha.0",
+        "@visx/responsive@4.0.1-alpha.0",
+        "d3-array",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/composed-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/composed-chart.tsx"
+        },
+        {
+          "path": "src/charts/series-bar.tsx",
+          "type": "registry:component",
+          "target": "components/charts/series-bar.tsx"
+        },
+        {
+          "path": "src/charts/time-series-chart-shell.tsx",
+          "type": "registry:component",
+          "target": "components/charts/time-series-chart-shell.tsx"
         }
       ]
     },
@@ -367,6 +413,11 @@
           "path": "src/charts/line-chart.tsx",
           "type": "registry:component",
           "target": "components/charts/line-chart.tsx"
+        },
+        {
+          "path": "src/charts/time-series-chart-shell.tsx",
+          "type": "registry:component",
+          "target": "components/charts/time-series-chart-shell.tsx"
         },
         {
           "path": "src/charts/line.tsx",

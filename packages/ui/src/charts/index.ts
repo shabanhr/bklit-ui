@@ -80,6 +80,11 @@ export {
   useChoropleth,
   useChoroplethZoom,
 } from "./choropleth";
+// Composed time-series (line + area + SeriesBar on shared time scale)
+export {
+  ComposedChart,
+  type ComposedChartProps,
+} from "./composed-chart";
 // Funnel chart components
 export {
   FunnelChart,
@@ -215,6 +220,8 @@ export {
   SegmentLineTo,
   type SegmentLineVariant,
 } from "./segment";
+// Series bar (time-based columns for ComposedChart)
+export { SeriesBar, type SeriesBarProps } from "./series-bar";
 // Tooltip components
 export {
   ChartTooltip,
