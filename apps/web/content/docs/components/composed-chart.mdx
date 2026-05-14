@@ -1,0 +1,104 @@
+---
+title: Composed Chart
+description: Mix SeriesBar, Line, and Area on one shared time axis (Recharts ComposedChart–style)
+---
+
+import {
+  Area,
+  ComposedChart,
+  Grid,
+  Line,
+  SeriesBar,
+  XAxis,
+  YAxis,
+  ChartTooltip,
+} from "@bklitui/ui/charts";
+
+export const composedData = [
+  { date: new Date(2024, 0, 1), units: 38, revenue: 112, runRate: 105 },
+  { date: new Date(2024, 1, 1), units: 52, revenue: 128, runRate: 118 },
+  { date: new Date(2024, 2, 1), units: 44, revenue: 121, runRate: 122 },
+  { date: new Date(2024, 3, 1), units: 61, revenue: 145, runRate: 130 },
+  { date: new Date(2024, 4, 1), units: 55, revenue: 138, runRate: 135 },
+  { date: new Date(2024, 5, 1), units: 48, revenue: 124, runRate: 128 },
+];
+
+## Preview
+
+<ComponentPreview>
+  <div className="w-full">
+    <ComposedChart barGap={3} data={composedData} maxBarSize={12} xDataKey="date">
+      <Grid horizontal />
+      <Area dataKey="runRate" fill="var(--chart-4)" fillOpacity={0.22} />
+      <SeriesBar dataKey="units" fill="var(--chart-3)" />
+      <Line dataKey="revenue" stroke="var(--chart-1)" strokeWidth={2.5} />
+      <ChartTooltip showCrosshair={false} />
+      <XAxis />
+      <YAxis />
+    </ComposedChart>
+  </div>
+</ComponentPreview>
+
+## Installation
+
+<InstallationTabs
+  name="composed-chart"
+  dependencies={[
+    "@visx/curve",
+    "@visx/scale",
+    "@visx/shape",
+    "@visx/responsive",
+    "d3-array",
+    "motion",
+  ]}
+/>
+
+## Usage
+
+`ComposedChart` is the time-series shell for **mixing marks** on one `data` array and one pair of scales. Use **`SeriesBar`** for vertical columns aligned to dates (not the categorical `<Bar />` from `BarChart`, which uses a band scale).
+
+- **`barSize`**, **`maxBarSize`**, **`barGap`** — parent-level layout for `SeriesBar` groups (similar to Recharts `ComposedChart` props).
+- **`ChartTooltip`** — for bar-heavy layouts, **`showCrosshair={false}`** often looks cleaner because the hover band is already vertical columns.
+- **Hover dimming** — `SeriesBar` fades non-hovered columns using `tooltipData.index`, like grouped bars in `BarChart`. Tune with **`fadedOpacity`** on each `SeriesBar`.
+
+### Basic example
+
+```tsx
+import {
+  ComposedChart,
+  Grid,
+  Line,
+  SeriesBar,
+  XAxis,
+  YAxis,
+  ChartTooltip,
+} from "@bklitui/ui/charts";
+
+const data = [
+  { date: new Date(2024, 0, 1), units: 38, revenue: 112 },
+  // ...
+];
+
+export default function Example() {
+  return (
+    <ComposedChart data={data} xDataKey="date" maxBarSize={14} barGap={3}>
+      <Grid horizontal />
+      <SeriesBar dataKey="units" fill="var(--chart-3)" />
+      <Line dataKey="revenue" stroke="var(--chart-1)" />
+      <ChartTooltip showCrosshair={false} />
+      <XAxis />
+      <YAxis />
+    </ComposedChart>
+  );
+}
+```
+
+### More examples
+
+See the [charts gallery](/charts/composed-chart) for additional compositions (grouped `SeriesBar`, area + bar + line, bar + two lines).
+
+## See also
+
+- [Line Chart](/docs/components/line-chart) — lines only
+- [Area Chart](/docs/components/area-chart) — areas only
+- [Bar Chart](/docs/components/bar-chart) — categorical bars with `<Bar />`

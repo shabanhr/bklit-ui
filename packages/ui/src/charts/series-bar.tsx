@@ -17,6 +17,8 @@ export interface SeriesBarProps {
   radius?: number;
   /** Animate grow from baseline. Default: true */
   animate?: boolean;
+  /** Opacity for non-hovered bars when another point is hovered (matches BarChart). Default: 0.3 */
+  fadedOpacity?: number;
 }
 
 export function SeriesBar({
@@ -24,6 +26,7 @@ export function SeriesBar({
   fill = chartCssVars.linePrimary,
   radius = 4,
   animate = true,
+  fadedOpacity = 0.3,
 }: SeriesBarProps) {
   const {
     data,
@@ -40,6 +43,7 @@ export function SeriesBar({
     composedBarSize,
     composedMaxBarSize,
     composedBarGap,
+    tooltipData,
   } = useChart();
 
   const barKeys = useMemo(() => {
@@ -97,6 +101,8 @@ export function SeriesBar({
     return null;
   }
 
+  const hoveredIndex = tooltipData?.index ?? null;
+
   return (
     <g className="series-bar">
       {data.map((d, i) => {
@@ -112,6 +118,7 @@ export function SeriesBar({
         const valueY = yScale(value) ?? innerHeight;
         const barHeight = innerHeight - valueY;
         const categoryLabel = String(xAccessor(d).getTime());
+        const isFaded = hoveredIndex !== null && hoveredIndex !== i;
 
         if (animate && !isLoaded) {
           return (
@@ -120,9 +127,11 @@ export function SeriesBar({
               barHeight={barHeight}
               barWidth={barWidth}
               calculatedStaggerDelay={calculatedStaggerDelay}
+              fadedOpacity={fadedOpacity}
               fill={fill}
               index={i}
               innerHeight={innerHeight}
+              isFaded={isFaded}
               key={`${dataKey}-${categoryLabel}`}
               radius={radius}
               x={barLeft}
@@ -133,7 +142,7 @@ export function SeriesBar({
 
         return (
           <motion.rect
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isFaded ? fadedOpacity : 1 }}
             fill={fill}
             height={barHeight}
             key={`${dataKey}-${categoryLabel}`}
@@ -163,6 +172,8 @@ interface SeriesBarRectProps {
   innerHeight: number;
   calculatedStaggerDelay: number;
   animationDuration: number;
+  isFaded: boolean;
+  fadedOpacity: number;
 }
 
 function SeriesBarRect({
@@ -176,6 +187,8 @@ function SeriesBarRect({
   innerHeight,
   calculatedStaggerDelay,
   animationDuration,
+  isFaded,
+  fadedOpacity,
 }: SeriesBarRectProps) {
   const [isAnimated, setIsAnimated] = useState(false);
 
@@ -194,7 +207,7 @@ function SeriesBarRect({
 
   return (
     <motion.rect
-      animate={{ opacity: 1 }}
+      animate={{ opacity: isFaded ? fadedOpacity : 1 }}
       fill={fill}
       height={h}
       rx={radius}

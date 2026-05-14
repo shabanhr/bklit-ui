@@ -47,7 +47,7 @@ export default function PlaygroundPage() {
             <Grid horizontal />
             <SeriesBar dataKey="volume" fill="var(--chart-3)" />
             <Line dataKey="price" stroke="var(--chart-1)" />
-            <ChartTooltip />
+            <ChartTooltip showCrosshair={false} />
             <XAxis />
             <YAxis />
           </ComposedChart>

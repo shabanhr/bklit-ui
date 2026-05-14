@@ -17,6 +17,7 @@ import {
   ChoroplethFeatureComponent,
   ChoroplethGraticule,
   ChoroplethTooltip,
+  ComposedChart,
   FunnelChart,
   type FunnelStage,
   Grid,
@@ -60,6 +61,7 @@ import {
   SegmentBackground,
   SegmentLineFrom,
   SegmentLineTo,
+  SeriesBar,
   useChart,
   XAxis,
   YAxis,
@@ -128,6 +130,23 @@ const multiLineData = [
   { date: new Date(2024, 4, 1), desktop: 209, mobile: 130 },
   { date: new Date(2024, 5, 1), desktop: 214, mobile: 140 },
 ];
+
+/** ComposedChart demos: volume-style + trend on shared dates */
+const composedDemoData = [
+  { date: new Date(2024, 0, 1), units: 38, revenue: 112, runRate: 105 },
+  { date: new Date(2024, 1, 1), units: 52, revenue: 128, runRate: 118 },
+  { date: new Date(2024, 2, 1), units: 44, revenue: 121, runRate: 122 },
+  { date: new Date(2024, 3, 1), units: 61, revenue: 145, runRate: 130 },
+  { date: new Date(2024, 4, 1), units: 55, revenue: 138, runRate: 135 },
+  { date: new Date(2024, 5, 1), units: 48, revenue: 124, runRate: 128 },
+];
+
+const composedTriSeriesData = multiLineData.map((row) => ({
+  ...row,
+  installs: Math.round(
+    ((row.desktop as number) + (row.mobile as number)) * 0.12
+  ),
+}));
 
 const lineMarkers: ChartMarker[] = [
   {
@@ -1258,6 +1277,164 @@ function makeBarExamples(): ChartExample[] {
       ),
     },
   ];
+}
+
+function makeComposedExamples(): ChartExample[] {
+  const dataCast = composedDemoData as unknown as Record<string, unknown>[];
+  const triCast = composedTriSeriesData as unknown as Record<string, unknown>[];
+
+  return [
+    {
+      title: "Composed Chart — Bar + line",
+      description:
+        "SeriesBar and Line on one time scale; tooltip without vertical crosshair",
+      code: `<ComposedChart data={data} xDataKey="date" barGap={3} maxBarSize={14}>
+  <Grid horizontal />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis />
+  <YAxis />
+</ComposedChart>`,
+      footer:
+        "Hover a date: other SeriesBar columns fade (same idea as grouped BarChart).",
+      render: () => (
+        <ComposedChart
+          barGap={3}
+          data={dataCast}
+          maxBarSize={14}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="units" fill="var(--chart-3)" />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis />
+          <YAxis />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Grouped SeriesBar + line",
+      description: "Two SeriesBar series at each date plus a trend line",
+      code: `<ComposedChart data={data} barGap={2} maxBarSize={10}>
+  <Grid horizontal />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" />
+  <SeriesBar dataKey="runRate" fill="var(--chart-5)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis />
+  <YAxis />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          barGap={2}
+          data={dataCast}
+          maxBarSize={10}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="units" fill="var(--chart-3)" />
+          <SeriesBar dataKey="runRate" fill="var(--chart-5)" />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis />
+          <YAxis />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Area + bar + line",
+      description: "Stack visual layers: soft area, columns, sharp line",
+      code: `<ComposedChart data={data} barGap={3} maxBarSize={12}>
+  <Grid horizontal />
+  <Area dataKey="runRate" fill="var(--chart-4)" fillOpacity={0.25} />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis />
+  <YAxis />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          barGap={3}
+          data={dataCast}
+          maxBarSize={12}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <Area dataKey="runRate" fill="var(--chart-4)" fillOpacity={0.25} />
+          <SeriesBar dataKey="units" fill="var(--chart-3)" />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis />
+          <YAxis />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Bar + two lines",
+      description: "Installs as columns with desktop and mobile lines",
+      code: `<ComposedChart data={data} maxBarSize={10} barGap={2}>
+  <Grid horizontal />
+  <SeriesBar dataKey="installs" fill="var(--chart-3)" />
+  <Line dataKey="desktop" stroke="var(--chart-1)" />
+  <Line dataKey="mobile" stroke="var(--chart-2)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis />
+  <YAxis />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          barGap={2}
+          data={triCast}
+          maxBarSize={10}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="installs" fill="var(--chart-3)" />
+          <Line dataKey="desktop" stroke="var(--chart-1)" />
+          <Line dataKey="mobile" stroke="var(--chart-2)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis />
+          <YAxis />
+        </ComposedChart>
+      ),
+    },
+  ];
+}
+
+function makeComposedHero(): ChartExample {
+  return {
+    title: "Composed Chart",
+    description:
+      "One time axis, one Y scale: combine SeriesBar, Line, and Area like a Recharts ComposedChart.",
+    code: `<ComposedChart data={data} xDataKey="date" barGap={3} maxBarSize={12}>
+  <Grid horizontal />
+  <Area dataKey="runRate" fill="var(--chart-4)" fillOpacity={0.22} />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" strokeWidth={2.5} />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis />
+  <YAxis />
+</ComposedChart>`,
+    render: () => (
+      <ComposedChart
+        barGap={3}
+        data={composedDemoData as unknown as Record<string, unknown>[]}
+        maxBarSize={12}
+        xDataKey="date"
+      >
+        <Grid horizontal />
+        <Area dataKey="runRate" fill="var(--chart-4)" fillOpacity={0.22} />
+        <SeriesBar dataKey="units" fill="var(--chart-3)" />
+        <Line dataKey="revenue" stroke="var(--chart-1)" strokeWidth={2.5} />
+        <ChartTooltip showCrosshair={false} />
+        <XAxis />
+        <YAxis />
+      </ComposedChart>
+    ),
+  };
 }
 
 function makeLineExamples(): ChartExample[] {
@@ -3500,6 +3677,7 @@ function makeFunnelExamples(): ChartExample[] {
 
 const chartTypes = [
   { label: "Area Chart", slug: "area-chart" },
+  { label: "Composed Chart", slug: "composed-chart" },
   { label: "Bar Chart", slug: "bar-chart" },
   { label: "Candlestick Chart", slug: "candlestick-chart" },
   { label: "Choropleth Chart", slug: "choropleth-chart" },
@@ -3562,6 +3740,10 @@ const chartExamplesRegistry: Record<string, RegistryEntry> = {
     factory: makeChoroplethExamples,
     columns: 2,
     hero: makeChoroplethHero,
+  },
+  "composed-chart": {
+    factory: makeComposedExamples,
+    hero: makeComposedHero,
   },
   "funnel-chart": {
     factory: makeFunnelExamples,

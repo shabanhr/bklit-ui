@@ -26,6 +26,7 @@ const components = [
   { text: "Line Chart", url: "/docs/components/line-chart" },
   { text: "Live Line Chart", url: "/docs/components/live-line-chart" },
   { text: "Area Chart", url: "/docs/components/area-chart" },
+  { text: "Composed Chart", url: "/docs/components/composed-chart" },
   { text: "Bar Chart", url: "/docs/components/bar-chart" },
   { text: "Candlestick Chart", url: "/docs/components/candlestick-chart" },
   { text: "Funnel Chart", url: "/docs/components/funnel-chart" },
