@@ -1,16 +1,17 @@
 {
   "title": "Components",
   "pages": [
-    "line-chart",
-    "live-line-chart",
     "area-chart",
     "bar-chart",
     "candlestick-chart",
+    "choropleth-chart",
+    "composed-chart",
     "funnel-chart",
-    "ring-chart",
+    "line-chart",
+    "live-line-chart",
     "pie-chart",
     "radar-chart",
-    "sankey-chart",
-    "choropleth-chart"
+    "ring-chart",
+    "sankey-chart"
   ]
 }

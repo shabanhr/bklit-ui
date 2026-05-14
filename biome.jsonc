@@ -6,6 +6,12 @@
   },
   "overrides": [
     {
+      "includes": ["apps/web/public/r/**/*.json"],
+      "formatter": { "enabled": false },
+      "linter": { "enabled": false },
+      "assist": { "enabled": false }
+    },
+    {
       // Allow barrel files for library exports - standard pattern for component libraries
       "includes": [
         "packages/ui/src/**/index.ts",

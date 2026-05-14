@@ -6,7 +6,6 @@ import {
   ChartTooltip,
   type OHLCDataPoint,
   XAxis,
-  YAxis,
 } from "@bklitui/ui/charts";
 import { CandlestickTooltipDemo } from "./candlestick-tooltip-demo";
 
@@ -23,22 +22,17 @@ const chartData: OHLCDataPoint[] = [
   { date: new Date(2024, 0, 10), open: 120, high: 128, low: 117, close: 125 },
 ];
 
-function formatUsd(v: number) {
-  return `$${v.toFixed(2)}`;
-}
-
 export function CandlestickChartDemo() {
   return (
     <div className="w-full">
       <CandlestickChart
         data={chartData}
-        margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+        margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
         style={{ height: 320 }}
       >
         <Candlestick fadedOpacity={0.25} />
         <ChartTooltip content={CandlestickTooltipDemo} />
         <XAxis />
-        <YAxis formatValue={formatUsd} />
       </CandlestickChart>
     </div>
   );

@@ -17,6 +17,7 @@ import {
   ChoroplethFeatureComponent,
   ChoroplethGraticule,
   ChoroplethTooltip,
+  ComposedChart,
   FunnelChart,
   type FunnelStage,
   Grid,
@@ -60,11 +61,18 @@ import {
   SegmentBackground,
   SegmentLineFrom,
   SegmentLineTo,
+  SeriesBar,
   useChart,
   XAxis,
-  YAxis,
 } from "@bklitui/ui/charts";
-import { curveLinear, curveMonotoneX, curveStep } from "@visx/curve";
+import {
+  curveBasis,
+  curveCatmullRom,
+  curveLinear,
+  curveMonotoneX,
+  curveNatural,
+  curveStep,
+} from "@visx/curve";
 import { AreaClosed } from "@visx/shape";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { CheckIcon, CopyIcon } from "lucide-react";
@@ -75,6 +83,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -88,6 +97,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -96,7 +112,23 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { codeThemes } from "@/lib/code-theme";
+import {
+  composedDemoData,
+  composedStackedData,
+  composedTriSeriesData,
+} from "@/lib/composed-demo-data";
 import { cn } from "@/lib/utils";
+
+/** tailwind fuchsia-400 — patterned SeriesBar stroke in composed pattern demo */
+const COMPOSED_PATTERN_FUCHSIA = "#e879f9";
+
+/** Smoother path through dense daily points (hero + docs preview revenue / runRate). */
+const composedHeroSmoothCurve = curveCatmullRom.alpha(0.42);
+
+/** tailwind lime-300, amber-300, red-500 — composed “accent” gallery demo */
+const COMPOSED_ACCENT_LIME = "#bef264";
+const COMPOSED_ACCENT_AMBER = "#fcd34d";
+const COMPOSED_ACCENT_RED = "#ef4444";
 
 // ---------------------------------------------------------------------------
 // Shared data
@@ -955,26 +987,6 @@ function makeAreaExamples(): ChartExample[] {
         </AreaChart>
       ),
     },
-    {
-      title: "Area Chart - Y Axis",
-      description: "With y-axis value labels on the left",
-      code: `<AreaChart data={chartData} margin={{ left: 50 }}>
-  <Grid horizontal />
-  <Area dataKey="desktop" fillOpacity={0.3} strokeWidth={2} />
-  <YAxis />
-  <XAxis />
-  <ChartTooltip />
-</AreaChart>`,
-      render: () => (
-        <AreaChart data={areaData} margin={{ left: 50 }}>
-          <Grid horizontal />
-          <Area dataKey="desktop" fillOpacity={0.3} strokeWidth={2} />
-          <YAxis />
-          <XAxis />
-          <ChartTooltip />
-        </AreaChart>
-      ),
-    },
   ];
 }
 
@@ -1258,6 +1270,245 @@ function makeBarExamples(): ChartExample[] {
       ),
     },
   ];
+}
+
+function makeComposedExamples(): ChartExample[] {
+  const dataCast = composedDemoData as unknown as Record<string, unknown>[];
+  const stackedCast = composedStackedData as unknown as Record<
+    string,
+    unknown
+  >[];
+  const triCast = composedTriSeriesData as unknown as Record<string, unknown>[];
+
+  return [
+    {
+      title: "Composed Chart — Bar + line",
+      description:
+        "30 daily points with rounded SeriesBar tops (`radius`) and a smoothed revenue line",
+      code: `<ComposedChart data={data} xDataKey="date" aspectRatio="3 / 2" barGap={0} maxBarSize={32}>
+  <Grid horizontal />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" radius={5} />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      footer:
+        'Dense time series: use default XAxis ticks (numTicks) so labels stay readable. Use tickMode="data" when you only have a few rows (e.g. one bar per month).',
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={dataCast}
+          maxBarSize={32}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="units" fill="var(--chart-3)" radius={5} />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Lime / amber / red",
+      description:
+        "Fixed hex accents (tailwind lime-300, amber-300, red-500) with rounded bars",
+      code: `<ComposedChart data={data} aspectRatio="3 / 2" barGap={0} maxBarSize={30} xDataKey="date">
+  <Grid horizontal />
+  <Area dataKey="runRate" fill="#ef4444" fillOpacity={0.22} stroke="#ef4444" strokeWidth={1.5} />
+  <SeriesBar dataKey="units" fill="#bef264" radius={6} stroke="#bef264" />
+  <Line dataKey="revenue" stroke="#fcd34d" strokeWidth={2.5} />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={dataCast}
+          maxBarSize={30}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <Area
+            dataKey="runRate"
+            fill={COMPOSED_ACCENT_RED}
+            fillOpacity={0.22}
+            stroke={COMPOSED_ACCENT_RED}
+            strokeWidth={1.5}
+          />
+          <SeriesBar
+            dataKey="units"
+            fill={COMPOSED_ACCENT_LIME}
+            radius={6}
+            stroke={COMPOSED_ACCENT_LIME}
+          />
+          <Line
+            dataKey="revenue"
+            stroke={COMPOSED_ACCENT_AMBER}
+            strokeWidth={2.5}
+          />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Stacked SeriesBar + line",
+      description:
+        "Two stack segments per day with the same 30-day timeline; stackGap={0} for flush stacks",
+      code: `<ComposedChart data={data} aspectRatio="3 / 2" stacked stackGap={0} barGap={0} maxBarSize={28}>
+  <Grid horizontal />
+  <SeriesBar dataKey="direct" fill="var(--chart-3)" />
+  <SeriesBar dataKey="partner" fill="var(--chart-5)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={stackedCast}
+          maxBarSize={28}
+          stacked
+          stackGap={0}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="direct" fill="var(--chart-3)" />
+          <SeriesBar dataKey="partner" fill="var(--chart-5)" />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Grouped bars, no gap",
+      description:
+        "Two SeriesBar series per day with barGap={0}; rounded tops on both bar series",
+      code: `<ComposedChart data={data} aspectRatio="3 / 2" barGap={0} maxBarSize={26}>
+  <Grid horizontal />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" radius={4} />
+  <SeriesBar dataKey="runRate" fill="var(--chart-5)" radius={4} />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={dataCast}
+          maxBarSize={26}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="units" fill="var(--chart-3)" radius={4} />
+          <SeriesBar dataKey="runRate" fill="var(--chart-5)" radius={4} />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Pattern fills",
+      description:
+        "One SeriesBar with a fuchsia-400 diagonal pattern, one solid bar on theme colors; revenue line unchanged",
+      code: `import { PatternLines } from "@bklitui/ui/charts";
+
+<ComposedChart data={data} aspectRatio="3 / 2" barGap={0} maxBarSize={22}>
+  <PatternLines id="composed-pat-fuchsia" height={6} width={6} orientation={["diagonal"]} stroke="#e879f9" strokeWidth={1} />
+  <Grid horizontal />
+  <SeriesBar dataKey="units" fill="url(#composed-pat-fuchsia)" stroke="#e879f9" />
+  <SeriesBar dataKey="runRate" fill="var(--chart-5)" />
+  <Line dataKey="revenue" stroke="var(--chart-1)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={dataCast}
+          maxBarSize={22}
+          xDataKey="date"
+        >
+          <PatternLines
+            height={6}
+            id="composed-pat-fuchsia"
+            orientation={["diagonal"]}
+            stroke={COMPOSED_PATTERN_FUCHSIA}
+            strokeWidth={1}
+            width={6}
+          />
+          <Grid horizontal />
+          <SeriesBar
+            dataKey="units"
+            fill="url(#composed-pat-fuchsia)"
+            stroke={COMPOSED_PATTERN_FUCHSIA}
+          />
+          <SeriesBar dataKey="runRate" fill="var(--chart-5)" />
+          <Line dataKey="revenue" stroke="var(--chart-1)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+    {
+      title: "Composed Chart — Bar + two lines",
+      description:
+        "Installs as daily columns (rounded) with desktop and mobile lines (30-day variation)",
+      code: `<ComposedChart data={data} aspectRatio="3 / 2" barGap={0} maxBarSize={20}>
+  <Grid horizontal />
+  <SeriesBar dataKey="installs" fill="var(--chart-3)" radius={5} />
+  <Line dataKey="desktop" stroke="var(--chart-1)" />
+  <Line dataKey="mobile" stroke="var(--chart-2)" />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+      render: () => (
+        <ComposedChart
+          aspectRatio="3 / 2"
+          barGap={0}
+          data={triCast}
+          maxBarSize={20}
+          xDataKey="date"
+        >
+          <Grid horizontal />
+          <SeriesBar dataKey="installs" fill="var(--chart-3)" radius={5} />
+          <Line dataKey="desktop" stroke="var(--chart-1)" />
+          <Line dataKey="mobile" stroke="var(--chart-2)" />
+          <ChartTooltip showCrosshair={false} />
+          <XAxis numTicks={8} />
+        </ComposedChart>
+      ),
+    },
+  ];
+}
+
+function makeComposedHero(): ChartExample {
+  return {
+    title: "Composed Chart",
+    description:
+      "One time axis, one Y scale: combine SeriesBar, Line, and Area. Use the curve menu to swap the shared Line and Area interpolation.",
+    code: `import { curveCatmullRom } from "@visx/curve";
+
+<ComposedChart data={data} xDataKey="date" aspectRatio="2 / 1" barGap={0} maxBarSize={32}>
+  <Grid horizontal />
+  <Area dataKey="runRate" curve={curveCatmullRom.alpha(0.42)} fill="var(--chart-4)" fillOpacity={0.32} />
+  <SeriesBar dataKey="units" fill="var(--chart-3)" radius={4} />
+  <Line dataKey="revenue" curve={curveCatmullRom.alpha(0.42)} stroke="var(--chart-1)" strokeWidth={2.5} />
+  <ChartTooltip showCrosshair={false} />
+  <XAxis numTicks={8} />
+</ComposedChart>`,
+    footer:
+      "Hero uses a Radix Select for the Line and Area `curve` prop (SeriesBar shape is unchanged). See https://visx.airbnb.tech/docs/curve.",
+    render: () => <ComposedHeroWithCurveSelect />,
+  };
 }
 
 function makeLineExamples(): ChartExample[] {
@@ -2703,7 +2954,6 @@ function candlestickIndicatorColor(point: Record<string, unknown>): string {
 }
 
 function makeCandlestickExamples(): ChartExample[] {
-  const fmt = (v: number) => `$${v.toFixed(2)}`;
   return [
     {
       title: "Candlestick – Tooltip line matches candle",
@@ -2711,7 +2961,7 @@ function makeCandlestickExamples(): ChartExample[] {
         "Lime–emerald and yellow–red gradients. Crosshair color matches the focused candle (green/red); no dot.",
       code: `<LinearGradient id="candle-up" from="var(--color-lime-400)" to="var(--color-emerald-500)" />
 <LinearGradient id="candle-down" from="var(--color-yellow-400)" to="var(--color-red-500)" />
-<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick
     fadedOpacity={0.25}
     negativeFill="url(#candle-down)"
@@ -2723,12 +2973,11 @@ function makeCandlestickExamples(): ChartExample[] {
     showDots={false}
   />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <LinearGradient
@@ -2752,14 +3001,13 @@ function makeCandlestickExamples(): ChartExample[] {
             showDots={false}
           />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
     {
       title: "Candlestick – Chart 1 & 3",
       description: "Using --chart-1 and --chart-3 for a stronger contrast",
-      code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+      code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick
     fadedOpacity={0.25}
     negativeFill="var(--chart-3)"
@@ -2767,12 +3015,11 @@ function makeCandlestickExamples(): ChartExample[] {
   />
   <ChartTooltip content={CandlestickTooltipContent} />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <Candlestick
@@ -2782,7 +3029,6 @@ function makeCandlestickExamples(): ChartExample[] {
           />
           <ChartTooltip content={CandlestickTooltipContent} />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
@@ -2791,16 +3037,15 @@ function makeCandlestickExamples(): ChartExample[] {
       description: "Custom gradients: lime–emerald for up, yellow–red for down",
       code: `<LinearGradient id="up" from="var(--color-lime-400)" to="var(--color-emerald-500)" />
 <LinearGradient id="down" from="var(--color-yellow-400)" to="var(--color-red-500)" />
-<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick negativeFill="url(#down)" positiveFill="url(#up)" fadedOpacity={0.25} />
   <ChartTooltip content={CandlestickTooltipContent} />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <LinearGradient
@@ -2820,27 +3065,25 @@ function makeCandlestickExamples(): ChartExample[] {
           />
           <ChartTooltip content={CandlestickTooltipContent} />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
     {
       title: "Candlestick – Solid colors",
       description: "Solid emerald/red fills instead of gradients",
-      code: `<CandlestickChart data={ohlcData} candleWidth={8} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+      code: `<CandlestickChart data={ohlcData} candleWidth={8} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick
     negativeFill="var(--color-red-500)"
     positiveFill="var(--color-emerald-500)"
   />
   <ChartTooltip content={CandlestickTooltipContent} />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           candleWidth={8}
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <Candlestick
@@ -2849,26 +3092,24 @@ function makeCandlestickExamples(): ChartExample[] {
           />
           <ChartTooltip content={CandlestickTooltipContent} />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
     {
       title: "Candlestick – Pattern",
       description: "Diagonal pattern overlay on candle bodies",
-      code: `<CandlestickChart data={ohlcData} candleGap={0.15} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+      code: `<CandlestickChart data={ohlcData} candleGap={0.15} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <PatternLines id="candle-up" orientation={["diagonal"]} stroke="rgba(0,0,0,0.35)" ... />
   <PatternLines id="candle-down" orientation={["diagonal"]} stroke="rgba(0,0,0,0.35)" ... />
   <Candlestick bodyPatternNegative="url(#candle-down)" bodyPatternPositive="url(#candle-up)" />
   <ChartTooltip content={CandlestickTooltipContent} />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           candleGap={0.15}
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <PatternLines
@@ -2894,23 +3135,21 @@ function makeCandlestickExamples(): ChartExample[] {
           />
           <ChartTooltip content={CandlestickTooltipContent} />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
     {
       title: "Candlestick – Tooltip only",
       description: "Tooltip box without crosshair or dots",
-      code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+      code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick fadedOpacity={0.25} />
   <ChartTooltip content={CandlestickTooltipContent} showCrosshair={false} showDots={false} />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
       render: () => (
         <CandlestickChart
           data={candlestickOhlcData}
-          margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+          margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
           style={{ height: 320 }}
         >
           <Candlestick fadedOpacity={0.25} />
@@ -2920,7 +3159,6 @@ function makeCandlestickExamples(): ChartExample[] {
             showDots={false}
           />
           <XAxis />
-          <YAxis formatValue={fmt} />
         </CandlestickChart>
       ),
     },
@@ -2936,12 +3174,11 @@ function candlestickChartPaletteIndicatorColor(
 }
 
 function makeCandlestickHero(): ChartExample {
-  const fmt = (v: number) => `$${v.toFixed(2)}`;
   return {
     title: "Candlestick Chart – Tooltip line matches candle",
     description:
       "Default palette (--chart-1 and --chart-5). The crosshair color follows the focused candle; no dot.",
-    code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 56 }} style={{ height: 320 }}>
+    code: `<CandlestickChart data={ohlcData} margin={{ top: 16, right: 16, bottom: 40, left: 16 }} style={{ height: 320 }}>
   <Candlestick
     fadedOpacity={0.25}
     negativeFill="var(--chart-5)"
@@ -2953,7 +3190,6 @@ function makeCandlestickHero(): ChartExample {
     showDots={false}
   />
   <XAxis />
-  <YAxis formatValue={(v) => \`$\${v.toFixed(2)}\`} />
 </CandlestickChart>`,
     data: `interface OHLCDataPoint {
   date: Date;
@@ -2966,7 +3202,7 @@ const ohlcData: OHLCDataPoint[] = [ ... ];`,
     render: () => (
       <CandlestickChart
         data={candlestickOhlcData}
-        margin={{ top: 16, right: 16, bottom: 40, left: 56 }}
+        margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
         style={{ height: 320 }}
       >
         <Candlestick
@@ -2980,7 +3216,6 @@ const ohlcData: OHLCDataPoint[] = [ ... ];`,
           showDots={false}
         />
         <XAxis />
-        <YAxis formatValue={fmt} />
       </CandlestickChart>
     ),
   };
@@ -2994,6 +3229,21 @@ const ohlcData: OHLCDataPoint[] = [ ... ];`,
 // Hero examples (full-width, richer composition)
 // ---------------------------------------------------------------------------
 
+/** Catmull–Rom (α 0.42) for hero curve menu + composed gallery; see https://visx.airbnb.tech/docs/curve */
+
+const HERO_CURVE_OPTIONS = [
+  { value: "natural", label: "Natural", curve: curveNatural },
+  { value: "monotoneX", label: "Monotone X", curve: curveMonotoneX },
+  { value: "linear", label: "Linear", curve: curveLinear },
+  { value: "step", label: "Step", curve: curveStep },
+  { value: "basis", label: "Basis", curve: curveBasis },
+  {
+    value: "catmullRom",
+    label: "Catmull–Rom",
+    curve: composedHeroSmoothCurve,
+  },
+] as const;
+
 const lineHeroData = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(2024, 0, i + 1),
   desktop: Math.floor(150 + Math.sin(i / 4) * 80 + ((i * 7) % 31)),
@@ -3005,6 +3255,140 @@ const areaHeroData = Array.from({ length: 30 }, (_, i) => ({
   revenue: Math.floor(8000 + Math.sin(i / 5) * 4000 + ((i * 11) % 2000)),
   costs: Math.floor(5000 + Math.cos(i / 4) * 2000 + ((i * 7) % 1500)),
 }));
+
+function ChartHeroCurveToolbar({
+  value,
+  onValueChange,
+}: {
+  value: string;
+  onValueChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <span className="text-muted-foreground text-xs">Curve</span>
+      <Select onValueChange={onValueChange} value={value}>
+        <SelectTrigger
+          aria-label="Chart curve"
+          className="h-8 w-[min(100%,11rem)] text-xs"
+        >
+          <SelectValue placeholder="Curve" />
+        </SelectTrigger>
+        <SelectContent position="popper">
+          {HERO_CURVE_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function LineHeroWithCurveSelect() {
+  const [curveId, setCurveId] = useState("natural");
+  const curve = useMemo(() => {
+    const hit = HERO_CURVE_OPTIONS.find((o) => o.value === curveId);
+    return hit?.curve ?? curveNatural;
+  }, [curveId]);
+
+  return (
+    <div className="space-y-3">
+      <ChartHeroCurveToolbar onValueChange={setCurveId} value={curveId} />
+      <LineChart aspectRatio="4 / 1" data={lineHeroData}>
+        <Grid horizontal />
+        <Line
+          curve={curve}
+          dataKey="desktop"
+          stroke="var(--chart-1)"
+          strokeWidth={2}
+        />
+        <Line
+          curve={curve}
+          dataKey="mobile"
+          stroke="var(--chart-3)"
+          strokeWidth={2}
+        />
+        <XAxis />
+        <ChartTooltip />
+      </LineChart>
+    </div>
+  );
+}
+
+function AreaHeroWithCurveSelect() {
+  const [curveId, setCurveId] = useState("monotoneX");
+  const curve = useMemo(() => {
+    const hit = HERO_CURVE_OPTIONS.find((o) => o.value === curveId);
+    return hit?.curve ?? curveMonotoneX;
+  }, [curveId]);
+
+  return (
+    <div className="space-y-3">
+      <ChartHeroCurveToolbar onValueChange={setCurveId} value={curveId} />
+      <AreaChart aspectRatio="4 / 1" data={areaHeroData}>
+        <Grid horizontal />
+        <Area
+          curve={curve}
+          dataKey="revenue"
+          fill="var(--chart-line-primary)"
+          fillOpacity={0.3}
+          strokeWidth={2}
+        />
+        <Area
+          curve={curve}
+          dataKey="costs"
+          fill="var(--chart-line-secondary)"
+          fillOpacity={0.2}
+          strokeWidth={1.5}
+        />
+        <SegmentBackground />
+        <SegmentLineFrom />
+        <SegmentLineTo />
+        <XAxis />
+        <ChartTooltip />
+      </AreaChart>
+    </div>
+  );
+}
+
+function ComposedHeroWithCurveSelect() {
+  const [curveId, setCurveId] = useState("catmullRom");
+  const curve = useMemo(() => {
+    const hit = HERO_CURVE_OPTIONS.find((o) => o.value === curveId);
+    return hit?.curve ?? composedHeroSmoothCurve;
+  }, [curveId]);
+
+  return (
+    <div className="space-y-3">
+      <ChartHeroCurveToolbar onValueChange={setCurveId} value={curveId} />
+      <ComposedChart
+        aspectRatio="2 / 1"
+        barGap={0}
+        data={composedDemoData as unknown as Record<string, unknown>[]}
+        maxBarSize={32}
+        xDataKey="date"
+      >
+        <Grid horizontal />
+        <Area
+          curve={curve}
+          dataKey="runRate"
+          fill="var(--chart-4)"
+          fillOpacity={0.32}
+        />
+        <SeriesBar dataKey="units" fill="var(--chart-3)" radius={4} />
+        <Line
+          curve={curve}
+          dataKey="revenue"
+          stroke="var(--chart-1)"
+          strokeWidth={2.5}
+        />
+        <ChartTooltip showCrosshair={false} />
+        <XAxis numTicks={8} />
+      </ComposedChart>
+    </div>
+  );
+}
 
 const barHeroData = Array.from({ length: 90 }, (_, i) => {
   const date = new Date(2024, 0, 1);
@@ -3020,11 +3404,14 @@ const barHeroData = Array.from({ length: 90 }, (_, i) => {
 function makeLineHero(): ChartExample {
   return {
     title: "Line Chart - Interactive",
-    description: "Desktop vs mobile visitors over 30 days",
-    code: `<LineChart data={chartData}>
+    description:
+      "Desktop vs mobile visitors over 30 days. Use the curve menu to compare @visx/curve factories on both lines.",
+    code: `import { curveNatural } from "@visx/curve";
+
+<LineChart data={chartData}>
   <Grid horizontal />
-  <Line dataKey="desktop" stroke="var(--chart-1)" strokeWidth={2} />
-  <Line dataKey="mobile" stroke="var(--chart-3)" strokeWidth={2} />
+  <Line curve={curveNatural} dataKey="desktop" stroke="var(--chart-1)" strokeWidth={2} />
+  <Line curve={curveNatural} dataKey="mobile" stroke="var(--chart-3)" strokeWidth={2} />
   <XAxis />
   <ChartTooltip />
 </LineChart>`,
@@ -3033,26 +3420,23 @@ function makeLineHero(): ChartExample {
   desktop: Math.floor(150 + Math.sin(i / 4) * 80 + ((i * 7) % 31)),
   mobile: Math.floor(80 + Math.cos(i / 3) * 50 + ((i * 5) % 23)),
 }));`,
-    render: () => (
-      <LineChart aspectRatio="4 / 1" data={lineHeroData}>
-        <Grid horizontal />
-        <Line dataKey="desktop" stroke="var(--chart-1)" strokeWidth={2} />
-        <Line dataKey="mobile" stroke="var(--chart-3)" strokeWidth={2} />
-        <XAxis />
-        <ChartTooltip />
-      </LineChart>
-    ),
+    footer:
+      "Hero uses a Radix Select to swap curves live; see https://visx.airbnb.tech/docs/curve for the full list.",
+    render: () => <LineHeroWithCurveSelect />,
   };
 }
 
 function makeAreaHero(): ChartExample {
   return {
     title: "Area Chart - Interactive",
-    description: "Revenue vs costs over 30 days with segment selection",
-    code: `<AreaChart data={chartData} aspectRatio="4 / 1">
+    description:
+      "Revenue vs costs over 30 days with segment selection. Use the curve menu to compare @visx/curve on both areas.",
+    code: `import { curveMonotoneX } from "@visx/curve";
+
+<AreaChart data={chartData} aspectRatio="4 / 1">
   <Grid horizontal />
-  <Area dataKey="revenue" fill="var(--chart-line-primary)" fillOpacity={0.3} strokeWidth={2} />
-  <Area dataKey="costs" fill="var(--chart-line-secondary)" fillOpacity={0.2} strokeWidth={1.5} />
+  <Area curve={curveMonotoneX} dataKey="revenue" fill="var(--chart-line-primary)" fillOpacity={0.3} strokeWidth={2} />
+  <Area curve={curveMonotoneX} dataKey="costs" fill="var(--chart-line-secondary)" fillOpacity={0.2} strokeWidth={1.5} />
   <SegmentBackground />
   <SegmentLineFrom />
   <SegmentLineTo />
@@ -3064,29 +3448,9 @@ function makeAreaHero(): ChartExample {
   revenue: Math.floor(8000 + Math.sin(i / 5) * 4000 + ((i * 11) % 2000)),
   costs: Math.floor(5000 + Math.cos(i / 4) * 2000 + ((i * 7) % 1500)),
 }));`,
-    footer: "Click and drag to select a range",
-    render: () => (
-      <AreaChart aspectRatio="4 / 1" data={areaHeroData}>
-        <Grid horizontal />
-        <Area
-          dataKey="revenue"
-          fill="var(--chart-line-primary)"
-          fillOpacity={0.3}
-          strokeWidth={2}
-        />
-        <Area
-          dataKey="costs"
-          fill="var(--chart-line-secondary)"
-          fillOpacity={0.2}
-          strokeWidth={1.5}
-        />
-        <SegmentBackground />
-        <SegmentLineFrom />
-        <SegmentLineTo />
-        <XAxis />
-        <ChartTooltip />
-      </AreaChart>
-    ),
+    footer:
+      "Click and drag to select a range. Hero curve menu uses the same Area `curve` prop for revenue and costs.",
+    render: () => <AreaHeroWithCurveSelect />,
   };
 }
 
@@ -3503,6 +3867,7 @@ const chartTypes = [
   { label: "Bar Chart", slug: "bar-chart" },
   { label: "Candlestick Chart", slug: "candlestick-chart" },
   { label: "Choropleth Chart", slug: "choropleth-chart" },
+  { label: "Composed Chart", slug: "composed-chart" },
   { label: "Funnel Chart", slug: "funnel-chart" },
   { label: "Line Chart", slug: "line-chart" },
   { label: "Live Line Chart", slug: "live-line-chart" },
@@ -3562,6 +3927,11 @@ const chartExamplesRegistry: Record<string, RegistryEntry> = {
     factory: makeChoroplethExamples,
     columns: 2,
     hero: makeChoroplethHero,
+  },
+  "composed-chart": {
+    factory: makeComposedExamples,
+    columns: 2,
+    hero: makeComposedHero,
   },
   "funnel-chart": {
     factory: makeFunnelExamples,

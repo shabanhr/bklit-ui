@@ -135,6 +135,22 @@ export interface ChartContextValue {
   hoveredCandleIndex?: number | null;
   /** Setter for hovered candle index */
   setHoveredCandleIndex?: (index: number | null) => void;
+
+  // ComposedChart + SeriesBar (optional)
+  /** `SeriesBar` dataKeys in tree order, for grouped columns at each x */
+  composedBarDataKeys?: string[];
+  /** Target bar width in px (Recharts `barSize` style). */
+  composedBarSize?: number;
+  /** Max bar width in px (Recharts `maxBarSize`). */
+  composedMaxBarSize?: number;
+  /** Gap between grouped `SeriesBar` columns in px. */
+  composedBarGap?: number;
+  /** When true, `SeriesBar` segments stack in child order at each x. */
+  composedStacked?: boolean;
+  /** Per-row cumulative offsets for stacked `SeriesBar` (data index → dataKey → offset). */
+  composedStackOffsets?: Map<number, Map<string, number>>;
+  /** Vertical gap in px between stacked `SeriesBar` segments. Default: 0 */
+  composedStackGap?: number;
 }
 
 const ChartContext = createContext<ChartContextValue | null>(null);
@@ -156,7 +172,7 @@ export function useChart(): ChartContextValue {
   if (!context) {
     throw new Error(
       "useChart must be used within a ChartProvider. " +
-        "Make sure your component is wrapped in <LineChart>, <AreaChart>, or <BarChart>."
+        "Make sure your component is wrapped in <LineChart>, <AreaChart>, <BarChart>, or <ComposedChart>."
     );
   }
   return context;

@@ -23,17 +23,18 @@ interface SiteHeaderProps {
 }
 
 const components = [
-  { text: "Line Chart", url: "/docs/components/line-chart" },
-  { text: "Live Line Chart", url: "/docs/components/live-line-chart" },
   { text: "Area Chart", url: "/docs/components/area-chart" },
   { text: "Bar Chart", url: "/docs/components/bar-chart" },
   { text: "Candlestick Chart", url: "/docs/components/candlestick-chart" },
+  { text: "Choropleth Chart", url: "/docs/components/choropleth-chart" },
+  { text: "Composed Chart", url: "/docs/components/composed-chart" },
   { text: "Funnel Chart", url: "/docs/components/funnel-chart" },
-  { text: "Ring Chart", url: "/docs/components/ring-chart" },
+  { text: "Line Chart", url: "/docs/components/line-chart" },
+  { text: "Live Line Chart", url: "/docs/components/live-line-chart" },
   { text: "Pie Chart", url: "/docs/components/pie-chart" },
   { text: "Radar Chart", url: "/docs/components/radar-chart" },
+  { text: "Ring Chart", url: "/docs/components/ring-chart" },
   { text: "Sankey Chart", url: "/docs/components/sankey-chart" },
-  { text: "Choropleth Chart", url: "/docs/components/choropleth-chart" },
 ];
 
 const utilities = [
