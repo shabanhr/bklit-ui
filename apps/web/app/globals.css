@@ -24,6 +24,7 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-label: var(--chart-label);
+  --color-chart-tooltip-background: var(--chart-tooltip-background);
   --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
   --color-chart-tooltip-muted: var(--chart-tooltip-muted);
   --color-chart-indicator: var(--chart-indicator-color);
