@@ -1,6 +1,7 @@
 "use client";
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,17 +11,32 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { codeThemes } from "@/lib/code-theme";
 import { generateStudioCode } from "@/lib/studio/codegen";
 import type { StudioUrlState } from "@/lib/studio/studio-parsers";
 import { CopyButton } from "./copy-button";
 
+const StudioHighlightedCode = dynamic(
+  () =>
+    import("./studio-highlighted-code").then(
+      (mod) => mod.StudioHighlightedCode
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <pre className="max-h-[min(60vh,32rem)] overflow-auto rounded-lg border bg-muted/40 p-4 font-mono text-xs">
+        <code>Loading…</code>
+      </pre>
+    ),
+  }
+);
+
 export function StudioCodeSheet({ state }: { state: StudioUrlState }) {
+  const [open, setOpen] = useState(false);
   const { code, data, title } = generateStudioCode(state.chart, state);
   const fullCode = data ? `${data}\n\n${code}` : code;
 
   return (
-    <Sheet>
+    <Sheet onOpenChange={setOpen} open={open}>
       <SheetTrigger asChild>
         <Button className="h-10 px-4 text-sm" type="button" variant="outline">
           Get code
@@ -38,29 +54,19 @@ export function StudioCodeSheet({ state }: { state: StudioUrlState }) {
             <CopyButton text={fullCode} />
           </div>
         </SheetHeader>
-        <div className="space-y-4 px-6 pb-6">
-          <div className="overflow-hidden rounded-lg border [&_figure]:my-0! [&_pre]:my-0!">
-            <DynamicCodeBlock
-              code={code}
-              lang="tsx"
-              options={{ themes: codeThemes }}
-            />
+        {open ? (
+          <div className="space-y-4 px-6 pb-6">
+            <StudioHighlightedCode code={code} lang="tsx" />
+            {data ? (
+              <>
+                <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+                  Data
+                </p>
+                <StudioHighlightedCode code={data} lang="tsx" />
+              </>
+            ) : null}
           </div>
-          {data ? (
-            <>
-              <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                Data
-              </p>
-              <div className="overflow-hidden rounded-lg border [&_figure]:my-0! [&_pre]:my-0!">
-                <DynamicCodeBlock
-                  code={data}
-                  lang="tsx"
-                  options={{ themes: codeThemes }}
-                />
-              </div>
-            </>
-          ) : null}
-        </div>
+        ) : null}
       </SheetContent>
     </Sheet>
   );
