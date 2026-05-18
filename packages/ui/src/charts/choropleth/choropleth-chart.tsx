@@ -5,6 +5,7 @@ import { ParentSize } from "@visx/responsive";
 import type { TransformMatrix } from "@visx/zoom";
 import { Zoom } from "@visx/zoom";
 import type { FeatureCollection, Geometry } from "geojson";
+import type { Transition } from "motion/react";
 import React, {
   type ReactNode,
   useCallback,
@@ -29,6 +30,10 @@ export interface ChoroplethChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 800 */
   animationDuration?: number;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers enter replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "16 / 9" */
   aspectRatio?: string;
   /** Projection scale. If not provided, auto-calculated based on width */
@@ -117,6 +122,8 @@ function ChoroplethChartInner({
   height,
   margin,
   animationDuration,
+  enterTransition,
+  revealSignature = "",
   scale: scaleProp,
   center,
   translate: translateProp,
@@ -131,6 +138,8 @@ function ChoroplethChartInner({
   height: number;
   margin: Margin;
   animationDuration: number;
+  enterTransition?: Transition;
+  revealSignature?: string;
   scale?: number;
   center: [number, number];
   translate?: [number, number];
@@ -142,6 +151,7 @@ function ChoroplethChartInner({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [revealEpoch, setRevealEpoch] = useState(0);
   const [hoveredFeatureIndex, setHoveredFeatureIndex] = useState<number | null>(
     null
   );
@@ -161,12 +171,15 @@ function ChoroplethChartInner({
     innerHeight / 2 + margin.top + 50,
   ];
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
   useEffect(() => {
+    setRevealEpoch((n) => n + 1);
+    setIsLoaded(false);
     const timeout = setTimeout(() => {
       setIsLoaded(true);
     }, animationDuration);
     return () => clearTimeout(timeout);
-  }, [animationDuration]);
+  }, [animationDuration, revealSignature]);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredFeatureIndex(null);
@@ -216,6 +229,8 @@ function ChoroplethChartInner({
           containerRef,
           isLoaded,
           animationDuration,
+          enterTransition,
+          revealEpoch,
         };
 
         // Separate SVG children from HTML overlay children
@@ -285,6 +300,8 @@ export function ChoroplethChart({
   data,
   margin: marginProp,
   animationDuration = 800,
+  enterTransition,
+  revealSignature,
   aspectRatio = "16 / 9",
   scale,
   center = [0, 20],
@@ -307,9 +324,11 @@ export function ChoroplethChart({
               animationDuration={animationDuration}
               center={center}
               data={data}
+              enterTransition={enterTransition}
               height={height}
               initialZoom={initialZoom}
               margin={margin}
+              revealSignature={revealSignature}
               scale={scale}
               translate={translate}
               width={width}

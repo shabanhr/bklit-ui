@@ -12,6 +12,7 @@ type ScaleBand<Domain extends { toString(): string }> = ReturnType<
   typeof scaleBand<Domain>
 >;
 
+import type { Transition } from "motion/react";
 import {
   createContext,
   type Dispatch,
@@ -101,6 +102,10 @@ export interface ChartContextValue {
   animationDuration: number;
   /** CSS easing for clip-reveal / line draw (cartesian charts). */
   animationEasing?: string;
+  /** Motion enter transition (spring or tween) — drives clip reveal when spring. */
+  enterTransition?: Transition;
+  /** Increments when enter animation should replay. */
+  revealEpoch?: number;
 
   // X accessor - how to get the x value from data points
   xAccessor: (d: Record<string, unknown>) => Date;

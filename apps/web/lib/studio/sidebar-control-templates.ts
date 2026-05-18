@@ -17,7 +17,7 @@ export const lineGroup = (controls: StudioControl[]) =>
 export const axesGroup = (controls: StudioControl[]) =>
   controlGroup("Axes", controls);
 
-/** Standard curve control — use inside Line group; picker renders `studio-control-card`. */
+/** Standard curve control — use inside Line group. */
 export const curveControl = (): StudioControl => ({
   type: "curve",
   key: "curve",

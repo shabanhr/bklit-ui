@@ -27,6 +27,40 @@ export const DEFAULT_MOTION_BEZIER: [number, number, number, number] = [
   0.85, 0, 0.15, 1,
 ];
 
+/** Default motion panel values — original line chart reveal (ease, 1.1s, snappy curve). */
+export const DEFAULT_STUDIO_MOTION = {
+  motionType: "ease" as const,
+  motionDuration: 1.1,
+  motionBounce: 0.6,
+  motionEase: "snappy" as const,
+  motionBezier: "0.85, 0, 0.15, 1",
+  motionStaggerScale: 1,
+  animationDuration: 1100,
+};
+
+export function resetStudioMotionKeys(): Array<
+  keyof Pick<
+    StudioUrlState,
+    | "motionType"
+    | "motionDuration"
+    | "motionBounce"
+    | "motionEase"
+    | "motionBezier"
+    | "motionStaggerScale"
+    | "animationDuration"
+  >
+> {
+  return [
+    "motionType",
+    "motionDuration",
+    "motionBounce",
+    "motionEase",
+    "motionBezier",
+    "motionStaggerScale",
+    "animationDuration",
+  ];
+}
+
 export const DEFAULT_NOTCH_SPRING: Transition = {
   type: "spring",
   stiffness: 300,
@@ -34,7 +68,8 @@ export const DEFAULT_NOTCH_SPRING: Transition = {
 };
 
 /** Reference duration used for gauge notch stagger scaling. */
-export const MOTION_STAGGER_REFERENCE_DURATION = 0.8;
+export const MOTION_STAGGER_REFERENCE_DURATION =
+  DEFAULT_STUDIO_MOTION.motionDuration;
 
 export type MotionStateSlice = Pick<
   StudioUrlState,

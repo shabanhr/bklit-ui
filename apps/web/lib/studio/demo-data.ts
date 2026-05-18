@@ -184,3 +184,9 @@ export const lineHeroData = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(2024, 0, i + 1),
   desktop: Math.floor(150 + Math.sin(i / 4) * 80 + ((i * 7) % 31)),
 }));
+
+/** Sample points for live line chart codegen. */
+export const liveLineSampleData = Array.from({ length: 24 }, (_, i) => ({
+  time: Date.now() - (23 - i) * 1000,
+  value: Math.floor(40 + Math.sin(i / 3) * 18 + ((i * 5) % 11)),
+}));

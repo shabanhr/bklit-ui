@@ -1,10 +1,13 @@
+import type { Transition } from "motion/react";
 import {
   clampMotionDuration,
   getMotionBezier,
   type MotionStateSlice,
   motionSignature,
   motionStaggerScale,
+  studioMotionToTransition,
 } from "./motion-config";
+import type { StudioRenderContext } from "./render-context";
 import type { StudioUrlState } from "./studio-parsers";
 
 export type MotionPanelKind =
@@ -48,13 +51,23 @@ export function getStudioCssRevealProps(state: StudioUrlState) {
   return {
     animationDuration: studioAnimationDurationMs(state),
     animationEasing: studioAnimationEasingCss(motion),
+    enterTransition: studioMotionToTransition(motion),
+    revealSignature: motionSignature(motion),
   };
 }
 
-/** Remount key suffix when motion settings change. */
-export function studioMotionChartKey(
-  animationKey: number,
-  state: StudioUrlState
-): string {
-  return `${animationKey}-${motionSignature(motionSliceFromState(state))}-s${state.motionStaggerScale.toFixed(2)}`;
+/** Chart remount key: manual replay + debounced motion signature. */
+export function studioPreviewChartKey(ctx: StudioRenderContext): string {
+  return `${ctx.animationKey}-${ctx.motionRemountKey}`;
+}
+
+/** Motion enter props for charts with spring/tween slice enter (gauge, pie, ring, funnel). */
+export function getStudioMotionEnterProps(state: StudioUrlState): {
+  enterTransition: Transition;
+  enterStaggerScale: number;
+} {
+  return {
+    enterTransition: studioMotionToTransition(motionSliceFromState(state)),
+    enterStaggerScale: studioEnterStaggerScale(state),
+  };
 }

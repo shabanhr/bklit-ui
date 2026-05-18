@@ -4,15 +4,9 @@ import type {
   SankeyLink as SankeyLinkType,
   SankeyNode as SankeyNodeType,
 } from "d3-sankey";
-import { motion, useSpring, useTransform } from "motion/react";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { motion, useTransform } from "motion/react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMountProgress } from "../use-mount-progress";
 import {
   type SankeyLinkDatum,
   type SankeyNodeDatum,
@@ -111,18 +105,16 @@ function AnimatedLink({
   onMouseEnter,
   onMouseLeave,
 }: AnimatedLinkProps) {
+  const { enterTransition, revealEpoch } = useSankey();
   const pathRef = useRef<SVGPathElement>(null);
   const [pathLength, setPathLength] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
 
   // Links animate during the last 80% of total duration, starting at 20%
   const linkStartDelay = animationDuration * 0.2;
   const linkAnimDuration = animationDuration * 0.8;
-  // Stagger delay based on link index
-  const staggerDelay =
-    linkStartDelay + (index / totalLinks) * linkAnimDuration * 0.4;
+  const staggerDelaySeconds =
+    (linkStartDelay + (index / totalLinks) * linkAnimDuration * 0.4) / 1000;
 
-  // Measure path length before paint
   useLayoutEffect(() => {
     if (pathRef.current) {
       const length = pathRef.current.getTotalLength();
@@ -130,28 +122,11 @@ function AnimatedLink({
     }
   });
 
-  // Trigger animation after stagger delay
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShouldAnimate(true);
-    }, staggerDelay);
-    return () => clearTimeout(timeout);
-  }, [staggerDelay]);
-
-  // Spring for path growth animation (0 = hidden, 1 = fully visible)
-  const progress = useSpring(0, {
-    stiffness: 80,
-    damping: 20,
-  });
-
-  // Trigger the spring when shouldAnimate becomes true
-  useEffect(() => {
-    if (shouldAnimate) {
-      progress.set(1);
-    }
-  }, [shouldAnimate, progress]);
-
-  // Transform progress to strokeDashoffset (pathLength -> 0)
+  const progress = useMountProgress(
+    enterTransition,
+    staggerDelaySeconds,
+    `${revealEpoch}-${index}`
+  );
   const strokeDashoffset = useTransform(progress, [0, 1], [pathLength, 0]);
 
   // Calculate target opacity

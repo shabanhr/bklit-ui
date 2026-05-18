@@ -83,7 +83,7 @@ export function LiveLineStudioPreview({
   badge,
   lerpSpeed,
   exaggerate,
-  animationKey,
+  chartKey,
   frame,
 }: {
   intervalMs: number;
@@ -96,7 +96,7 @@ export function LiveLineStudioPreview({
   badge: boolean;
   lerpSpeed: number;
   exaggerate: boolean;
-  animationKey: number;
+  chartKey: string;
   frame: StudioFrameSize;
 }) {
   const { data, value } = useStudioLiveData(intervalMs, paused, windowSecs);
@@ -106,7 +106,7 @@ export function LiveLineStudioPreview({
       className="size-full"
       data={data}
       exaggerate={exaggerate}
-      key={animationKey}
+      key={chartKey}
       lerpSpeed={lerpSpeed}
       paused={paused}
       style={{ height: frame.height, touchAction: "none" }}

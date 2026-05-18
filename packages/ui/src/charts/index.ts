@@ -60,6 +60,10 @@ export {
   type LegendItem,
 } from "./chart-legend";
 export {
+  ChartRevealClip,
+  type ChartRevealClipProps,
+} from "./chart-reveal-clip";
+export {
   ChartStatFlow,
   type ChartStatFlowFormat,
   type ChartStatFlowProps,

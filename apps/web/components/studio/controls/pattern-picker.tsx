@@ -71,7 +71,7 @@ export function PatternPicker({
   onChange: (v: PatternPresetId) => void;
 }) {
   return (
-    <div className="studio-control-card -mx-0.5 flex flex-wrap gap-1.5 rounded-lg border border-border p-2">
+    <div className="flex flex-wrap gap-1.5">
       {PATTERN_PRESETS.map((preset) => (
         <button
           className={cn(

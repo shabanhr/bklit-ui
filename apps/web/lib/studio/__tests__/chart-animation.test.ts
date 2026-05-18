@@ -38,6 +38,6 @@ describe("chart-animation", () => {
       motionDuration: 1.6,
       motionStaggerScale: 0.5,
     });
-    assert.equal(studioEnterStaggerScale(state), 1);
+    assert.equal(studioEnterStaggerScale(state), (1.6 / 1.1) * 0.5);
   });
 });

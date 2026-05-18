@@ -269,7 +269,7 @@ export function MotionCurveEditor({
     <div className="space-y-2">
       <div
         className={cn(
-          "studio-control-card relative w-full rounded-lg border border-border",
+          "studio-motion-curve-card relative w-full rounded-lg border border-border",
           isEase || dragging ? "overflow-visible" : "overflow-hidden"
         )}
         ref={containerRef}

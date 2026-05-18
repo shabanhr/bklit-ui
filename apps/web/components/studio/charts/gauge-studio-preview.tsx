@@ -1,13 +1,11 @@
 "use client";
 
 import { Gauge } from "@bklitui/ui/charts";
-import { useEffect, useState } from "react";
 import { studioFitAspectSize } from "@/components/studio/charts/studio-chart-layout";
-import { studioEnterStaggerScale } from "@/lib/studio/chart-animation";
 import {
-  motionSignature,
-  studioMotionToTransition,
-} from "@/lib/studio/motion-config";
+  getStudioMotionEnterProps,
+  studioPreviewChartKey,
+} from "@/lib/studio/chart-animation";
 import type { StudioRenderContext } from "@/lib/studio/render-context";
 import type { StudioUrlState } from "@/lib/studio/studio-parsers";
 
@@ -18,7 +16,6 @@ const gaugeFormat = {
   maximumFractionDigits: 0,
 };
 
-/** Remounts gauge when motion settings change (debounced) so enter animation replays. */
 export function GaugeStudioPreview({
   state,
   ctx,
@@ -26,15 +23,8 @@ export function GaugeStudioPreview({
   state: StudioUrlState;
   ctx: StudioRenderContext;
 }) {
-  const sig = motionSignature(state);
-  const [motionRemountKey, setMotionRemountKey] = useState(sig);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setMotionRemountKey(sig), 280);
-    return () => window.clearTimeout(timer);
-  }, [sig]);
-
   const { width, height } = studioFitAspectSize(ctx.frame, 21 / 16);
+  const motionEnter = getStudioMotionEnterProps(state);
 
   return (
     <Gauge
@@ -43,12 +33,12 @@ export function GaugeStudioPreview({
       centerValue={state.centerValue}
       defaultLabel={state.gaugeLabel}
       endAngle={state.endAngle}
-      enterStaggerScale={studioEnterStaggerScale(state)}
-      enterTransition={studioMotionToTransition(state)}
+      enterStaggerScale={motionEnter.enterStaggerScale}
+      enterTransition={motionEnter.enterTransition}
       formatOptions={gaugeFormat}
       height={height}
       inactiveFillOpacity={state.inactiveFillOpacity}
-      key={`${ctx.animationKey}-${motionRemountKey}`}
+      key={studioPreviewChartKey(ctx)}
       notchCornerRadius={state.notchCornerRadius}
       notchLengthPercent={state.notchLengthPercent}
       spacing={state.spacing}

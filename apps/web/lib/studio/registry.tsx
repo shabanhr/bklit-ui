@@ -10,7 +10,6 @@ import {
   CandlestickChart,
   ChartTooltip,
   ComposedChart,
-  FunnelChart,
   Grid,
   Line,
   LinearGradient,
@@ -20,9 +19,6 @@ import {
   RadarChart,
   RadarGrid,
   RadarLabels,
-  Ring,
-  RingCenter,
-  RingChart,
   SankeyChart,
   SankeyLink,
   SankeyNode,
@@ -32,27 +28,30 @@ import {
 } from "@bklitui/ui/charts";
 import { validChartSlugs } from "@/components/charts/chart-slugs";
 import { ChoroplethStudioPreview } from "@/components/studio/charts/choropleth-studio";
+import { FunnelStudioPreview } from "@/components/studio/charts/funnel-studio-preview";
 import { GaugeStudioPreview } from "@/components/studio/charts/gauge-studio-preview";
 import { LiveLineStudioPreview } from "@/components/studio/charts/live-line-studio";
 import { StudioPatternArea } from "@/components/studio/charts/pattern-area";
 import { PieStudioPreview } from "@/components/studio/charts/pie-studio-preview";
+import { RingStudioPreview } from "@/components/studio/charts/ring-studio-preview";
 import {
   StudioCartesianFill,
   StudioRadialCenter,
-  studioFitAspectSize,
   studioRadialSize,
 } from "@/components/studio/charts/studio-chart-layout";
 import {
   getStudioCssRevealProps,
+  getStudioMotionEnterProps,
   motionSliceFromState,
   studioAnimationDurationMs,
-  studioMotionChartKey,
+  studioPreviewChartKey,
 } from "./chart-animation";
 import {
   areaChartDataSnippet,
   barCodegen,
   candlestickCodegen,
   cartesianCodegen,
+  choroplethDataSnippet,
   composedCodegen,
   funnelCodegen,
   gaugeCodegen,
@@ -70,12 +69,10 @@ import {
   barStackedData,
   candlestickOhlcData,
   composedDemoData,
-  funnelData,
   lineHeroData,
   pieData,
   radarDataDual,
   radarMetrics5,
-  ringData,
   sankeySimple,
 } from "./demo-data";
 import { motionEnterPropsCodegen } from "./motion-codegen";
@@ -101,11 +98,12 @@ const gaugeConfig: StudioChartConfig = {
   slug: "gauge-chart",
   label: chartLabels["gauge-chart"],
   supportsPatterns: true,
-  motionPanel: "gauge",
+  motionPanel: true,
+  motionStagger: true,
   controls: [],
   controlGroups: gaugeControlGroups,
   render: (state, ctx) => <GaugeStudioPreview ctx={ctx} state={state} />,
-  generateCode: (state) => ({ code: gaugeCodegen(state) }),
+  generateCode: (state) => gaugeCodegen(state),
 };
 
 const areaConfig: StudioChartConfig = {
@@ -113,7 +111,7 @@ const areaConfig: StudioChartConfig = {
   label: chartLabels["area-chart"],
   supportsPatterns: true,
   supportsCurves: true,
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: areaChartControlGroups,
   render: (state, ctx) => {
@@ -125,7 +123,7 @@ const areaConfig: StudioChartConfig = {
           {...getStudioCssRevealProps(state)}
           className="size-full"
           data={areaData}
-          key={studioMotionChartKey(ctx.animationKey, state)}
+          key={studioPreviewChartKey(ctx)}
         >
           <Grid horizontal />
           {ctx.patternDefs}
@@ -159,7 +157,7 @@ const lineConfig: StudioChartConfig = {
   slug: "line-chart",
   label: chartLabels["line-chart"],
   supportsCurves: true,
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: lineChartControlGroups,
   render: (state, ctx) => (
@@ -168,7 +166,7 @@ const lineConfig: StudioChartConfig = {
         {...getStudioCssRevealProps(state)}
         className="size-full"
         data={lineHeroData}
-        key={studioMotionChartKey(ctx.animationKey, state)}
+        key={studioPreviewChartKey(ctx)}
       >
         <Grid horizontal />
         <Line
@@ -193,7 +191,7 @@ const barConfig: StudioChartConfig = {
   slug: "bar-chart",
   label: chartLabels["bar-chart"],
   supportsPatterns: true,
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: barChartControlGroups,
   render: (state, ctx) => {
@@ -222,7 +220,7 @@ const barConfig: StudioChartConfig = {
           barWidth={state.barWidth > 0 ? state.barWidth : undefined}
           className="size-full"
           data={chartData}
-          key={studioMotionChartKey(ctx.animationKey, state)}
+          key={studioPreviewChartKey(ctx)}
           margin={horizontal ? { left: 80 } : undefined}
           orientation={state.barOrientation}
           stacked={stacked}
@@ -267,7 +265,7 @@ const composedConfig: StudioChartConfig = {
   label: chartLabels["composed-chart"],
   supportsPatterns: true,
   supportsCurves: true,
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: composedChartControlGroups,
   render: (state, ctx) => {
@@ -278,7 +276,7 @@ const composedConfig: StudioChartConfig = {
           {...getStudioCssRevealProps(state)}
           className="size-full"
           data={composedDemoData}
-          key={studioMotionChartKey(ctx.animationKey, state)}
+          key={studioPreviewChartKey(ctx)}
         >
           <Grid horizontal />
           {ctx.patternDefs}
@@ -313,7 +311,7 @@ const composedConfig: StudioChartConfig = {
 const pieConfig: StudioChartConfig = {
   slug: "pie-chart",
   label: chartLabels["pie-chart"],
-  motionPanel: "motion-enter",
+  motionPanel: true,
   controls: [],
   controlGroups: pieChartControlGroups,
   render: (state, ctx) => <PieStudioPreview ctx={ctx} state={state} />,
@@ -355,63 +353,56 @@ const pieConfig: StudioChartConfig = {
 const ringConfig: StudioChartConfig = {
   slug: "ring-chart",
   label: chartLabels["ring-chart"],
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: ringChartControlGroups,
-  render: (state, ctx) => (
-    <StudioRadialCenter frame={ctx.frame}>
-      <RingChart
-        animationDuration={studioAnimationDurationMs(state)}
-        baseInnerRadius={state.ringBaseInnerRadius}
-        data={ringData}
-        key={studioMotionChartKey(ctx.animationKey, state)}
-        ringGap={state.ringGap}
-        size={studioRadialSize(ctx.frame, state.pieSize)}
-        strokeWidth={state.strokeWidth}
-      >
-        {ringData.map((item, index) => (
-          <Ring index={index} key={item.label} />
-        ))}
-        <RingCenter defaultLabel="Channels" />
-      </RingChart>
-    </StudioRadialCenter>
-  ),
+  render: (state, ctx) => <RingStudioPreview ctx={ctx} state={state} />,
   generateCode: (state) => ringCodegen(state),
 };
 
 const radarConfig: StudioChartConfig = {
   slug: "radar-chart",
   label: chartLabels["radar-chart"],
-  motionPanel: "motion-stagger",
+  motionPanel: true,
+  motionStagger: true,
   controls: [],
   controlGroups: radarChartControlGroups,
-  render: (state, ctx) => (
-    <StudioRadialCenter frame={ctx.frame}>
-      <RadarChart
-        data={radarDataDual}
-        enterDurationMs={studioAnimationDurationMs(state)}
-        key={studioMotionChartKey(ctx.animationKey, state)}
-        levels={state.radarLevels}
-        margin={state.radarMargin}
-        metrics={radarMetrics5}
-        size={studioRadialSize(ctx.frame, state.radarSize)}
-        staggerScale={state.motionStaggerScale}
-      >
-        {state.showRadarGrid ? <RadarGrid /> : <RadarGrid showLabels={false} />}
-        <RadarAxis />
-        <RadarLabels fontSize={10} offset={16} />
-        {radarDataDual.map((item, index) => (
-          <RadarArea
-            index={index}
-            key={item.label}
-            showGlow={false}
-            showPoints={state.radarShowPoints}
-            showStroke={state.radarShowStroke}
-          />
-        ))}
-      </RadarChart>
-    </StudioRadialCenter>
-  ),
+  render: (state, ctx) => {
+    const motionEnter = getStudioMotionEnterProps(state);
+    return (
+      <StudioRadialCenter frame={ctx.frame}>
+        <RadarChart
+          data={radarDataDual}
+          enterDurationMs={studioAnimationDurationMs(state)}
+          enterTransition={motionEnter.enterTransition}
+          key={studioPreviewChartKey(ctx)}
+          levels={state.radarLevels}
+          margin={state.radarMargin}
+          metrics={radarMetrics5}
+          motionReplayKey={studioPreviewChartKey(ctx)}
+          size={studioRadialSize(ctx.frame, state.radarSize)}
+          staggerScale={motionEnter.enterStaggerScale}
+        >
+          {state.showRadarGrid ? (
+            <RadarGrid />
+          ) : (
+            <RadarGrid showLabels={false} />
+          )}
+          <RadarAxis />
+          <RadarLabels fontSize={10} offset={16} />
+          {radarDataDual.map((item, index) => (
+            <RadarArea
+              index={index}
+              key={item.label}
+              showGlow={false}
+              showPoints={state.radarShowPoints}
+              showStroke={state.radarShowStroke}
+            />
+          ))}
+        </RadarChart>
+      </StudioRadialCenter>
+    );
+  },
   generateCode: (state) => radarCodegen(state),
 };
 
@@ -419,7 +410,7 @@ const candlestickConfig: StudioChartConfig = {
   slug: "candlestick-chart",
   label: chartLabels["candlestick-chart"],
   supportsPatterns: true,
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: candlestickChartControlGroups,
   render: (state, ctx) => {
@@ -438,7 +429,7 @@ const candlestickConfig: StudioChartConfig = {
           candleGap={state.candleGap}
           className="size-full"
           data={candlestickOhlcData}
-          key={studioMotionChartKey(ctx.animationKey, state)}
+          key={studioPreviewChartKey(ctx)}
           margin={{ top: 16, right: 16, bottom: 40, left: 16 }}
         >
           {state.candleUseGradient ? (
@@ -476,32 +467,11 @@ const funnelConfig: StudioChartConfig = {
   slug: "funnel-chart",
   label: chartLabels["funnel-chart"],
   supportsPatterns: true,
-  motionPanel: "motion-enter",
+  motionPanel: true,
+  motionStagger: true,
   controls: [],
   controlGroups: funnelChartControlGroups,
-  render: (state, ctx) => {
-    const widthOverHeight =
-      state.funnelOrientation === "horizontal" ? 2.2 : 1 / 1.8;
-    const { width, height } = studioFitAspectSize(ctx.frame, widthOverHeight);
-    return (
-      <div className="shrink-0" style={{ width, height }}>
-        <FunnelChart
-          className="size-full"
-          color="var(--chart-1)"
-          data={funnelData}
-          edges={state.funnelEdges}
-          gap={state.funnelGap}
-          key={studioMotionChartKey(ctx.animationKey, state)}
-          layers={state.funnelLayers}
-          orientation={state.funnelOrientation}
-          showLabels={state.funnelShowLabels}
-          showPercentage={state.funnelShowPercentage}
-          showValues={state.funnelShowValues}
-          staggerDelay={0.12 * state.motionStaggerScale}
-        />
-      </div>
-    );
-  },
+  render: (state, ctx) => <FunnelStudioPreview ctx={ctx} state={state} />,
   generateCode: (state) => funnelCodegen(state),
 };
 
@@ -509,13 +479,14 @@ const liveLineConfig: StudioChartConfig = {
   slug: "live-line-chart",
   label: chartLabels["live-line-chart"],
   supportsCurves: true,
+  motionPanel: true,
   controls: [],
   controlGroups: liveLineChartControlGroups,
   render: (state, ctx) => (
     <StudioCartesianFill>
       <LiveLineStudioPreview
-        animationKey={ctx.animationKey}
         badge={state.liveBadge}
+        chartKey={studioPreviewChartKey(ctx)}
         curve={state.curve}
         exaggerate={state.liveExaggerate}
         fill={state.liveFill}
@@ -535,17 +506,17 @@ const liveLineConfig: StudioChartConfig = {
 const choroplethConfig: StudioChartConfig = {
   slug: "choropleth-chart",
   label: chartLabels["choropleth-chart"],
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: choroplethChartControlGroups,
   render: (state, ctx) => (
     <StudioCartesianFill>
       <ChoroplethStudioPreview
         analytics={state.choroplethAnalytics}
-        animationDuration={studioAnimationDurationMs(state)}
+        {...getStudioCssRevealProps(state)}
         bgPattern={state.choroplethBgPattern}
         fgPattern={state.choroplethFgPattern}
-        key={studioMotionChartKey(ctx.animationKey, state)}
+        key={studioPreviewChartKey(ctx)}
         showGraticule={state.showGraticule}
       />
     </StudioCartesianFill>
@@ -571,6 +542,7 @@ const choroplethConfig: StudioChartConfig = {
       code: `<ChoroplethChart data={geojson} aspectRatio="16 / 9" animationDuration={${state.animationDuration}}>${state.showGraticule ? "\n  <ChoroplethGraticule />" : ""}${bg}${solid}${fg}
   <ChoroplethTooltip${state.choroplethAnalytics ? ' getFeatureValue={getVisitorValue} valueLabel="Visitors"' : ""} />
 </ChoroplethChart>`,
+      data: choroplethDataSnippet(),
     };
   },
 };
@@ -578,7 +550,7 @@ const choroplethConfig: StudioChartConfig = {
 const sankeyConfig: StudioChartConfig = {
   slug: "sankey-chart",
   label: chartLabels["sankey-chart"],
-  motionPanel: "css-reveal",
+  motionPanel: true,
   controls: [],
   controlGroups: sankeyChartControlGroups,
   render: (state, ctx) => (
@@ -587,7 +559,7 @@ const sankeyConfig: StudioChartConfig = {
         {...getStudioCssRevealProps(state)}
         className="size-full"
         data={sankeySimple}
-        key={studioMotionChartKey(ctx.animationKey, state)}
+        key={studioPreviewChartKey(ctx)}
         nodePadding={state.sankeyNodePadding}
         nodeWidth={state.sankeyNodeWidth}
       >

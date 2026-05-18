@@ -1,8 +1,10 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { motion } from "motion/react";
 import { useMemo } from "react";
 import { useChart } from "./chart-context";
+import { transitionWithDelay } from "./motion-utils";
 
 const DEFAULT_POSITIVE = "url(#candlestick-positive)";
 const DEFAULT_NEGATIVE = "url(#candlestick-negative)";
@@ -48,8 +50,9 @@ interface CandleShape {
   bodyPattern: string | undefined;
   hasPatternOverlay: boolean;
   insideStrokeWidth: number;
-  transition: { duration: number; ease: "easeInOut" };
+  enterTransition: Transition;
   delay: number;
+  revealEpoch: number;
   isFaded: boolean;
   fadedOpacity: number;
 }
@@ -69,17 +72,19 @@ function CandleRect({
   bodyPattern,
   hasPatternOverlay,
   insideStrokeWidth,
-  transition,
+  enterTransition,
   delay,
+  revealEpoch,
   isFaded,
   fadedOpacity,
 }: CandleShape) {
   const bodyOrigin = `${centerX}px ${bodyTop + bodyHeight / 2}px`;
-  const t = { ...transition, delay };
+  const t = transitionWithDelay(enterTransition, delay);
   return (
     <motion.g
       animate={{ opacity: isFaded ? fadedOpacity : 1 }}
       initial={{ opacity: 0 }}
+      key={`candle-g-${centerX}-${revealEpoch}`}
       style={{ transformOrigin: `${centerX}px ${wickCenterY}px` }}
       transition={{ ...t, opacity: { duration: 0.15 } }}
     >
@@ -160,6 +165,8 @@ export function Candlestick({
     yScale,
     xAccessor,
     animationDuration,
+    enterTransition,
+    revealEpoch = 0,
     bandWidth,
     columnWidth,
     hoveredCandleIndex,
@@ -173,13 +180,12 @@ export function Candlestick({
     return (animationDuration * 0.6) / data.length;
   }, [animationDuration, data.length]);
 
-  const transition = useMemo(
-    () => ({
-      duration: 0.4,
-      ease: "easeInOut" as const,
-    }),
-    []
-  );
+  const defaultEnter: Transition = {
+    type: "spring",
+    duration: 0.8,
+    bounce: 0.15,
+  };
+  const enter = enterTransition ?? defaultEnter;
 
   return (
     <g className="chart-candlesticks">
@@ -225,12 +231,13 @@ export function Candlestick({
             candleWidth={candleWidth}
             centerX={centerX}
             delay={delay}
+            enterTransition={enter}
             fadedOpacity={fadedOpacity}
             hasPatternOverlay={hasPatternOverlay}
             insideStrokeWidth={insideStrokeWidth}
             isFaded={isFaded}
             key={xAccessor(d).getTime()}
-            transition={transition}
+            revealEpoch={revealEpoch}
             wickCenterY={wickCenterY}
             wickFill={wickFill}
             wickHeight={wickHeight}

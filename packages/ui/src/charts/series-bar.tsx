@@ -1,9 +1,10 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_ANIMATION_EASING } from "./animation";
+import { useMemo } from "react";
 import { chartCssVars, useChart } from "./chart-context";
+import { transitionWithDelay } from "./motion-utils";
 
 function computeSeriesBarLayout(input: {
   stacked: boolean;
@@ -108,7 +109,8 @@ export function SeriesBar({
     columnWidth,
     isLoaded,
     animationDuration,
-    animationEasing: animationEasingProp,
+    enterTransition,
+    revealEpoch = 0,
     barScale,
     composedBarDataKeys,
     composedBarSize,
@@ -119,8 +121,6 @@ export function SeriesBar({
     composedStackGap,
     tooltipData,
   } = useChart();
-
-  const animationEasing = animationEasingProp ?? DEFAULT_ANIMATION_EASING;
 
   const barKeys = useMemo(() => {
     if (composedBarDataKeys && composedBarDataKeys.length > 0) {
@@ -178,8 +178,6 @@ export function SeriesBar({
   const staggerSpread = totalAnimDuration * 0.4;
   const calculatedStaggerDelay =
     data.length > 1 ? staggerSpread / 1000 / data.length : 0;
-  const barDuration = totalAnimDuration * 0.6;
-
   if (barScale) {
     console.warn(
       "SeriesBar is for time-based ComposedChart / LineChart context. Use Bar inside BarChart for categorical x."
@@ -224,18 +222,18 @@ export function SeriesBar({
         if (animate && !isLoaded) {
           return (
             <SeriesBarRect
-              animationDuration={barDuration}
-              animationEasing={animationEasing}
               barHeight={barHeight}
               barWidth={barWidth}
               calculatedStaggerDelay={calculatedStaggerDelay}
+              enterTransition={enterTransition}
               fadedOpacity={fadedOpacity}
               fill={fill}
               index={i}
               innerHeight={innerHeight}
               isFaded={isFaded}
-              key={`${dataKey}-${categoryLabel}`}
+              key={`${dataKey}-${categoryLabel}-${revealEpoch}`}
               radius={effectiveRadius}
+              revealEpoch={revealEpoch}
               x={barLeft}
               y={valueY}
             />
@@ -273,8 +271,8 @@ interface SeriesBarRectProps {
   index: number;
   innerHeight: number;
   calculatedStaggerDelay: number;
-  animationDuration: number;
-  animationEasing: string;
+  enterTransition?: Transition;
+  revealEpoch: number;
   isFaded: boolean;
   fadedOpacity: number;
 }
@@ -289,40 +287,31 @@ function SeriesBarRect({
   index,
   innerHeight,
   calculatedStaggerDelay,
-  animationDuration,
-  animationEasing,
+  enterTransition,
+  revealEpoch,
   isFaded,
   fadedOpacity,
 }: SeriesBarRectProps) {
-  const [isAnimated, setIsAnimated] = useState(false);
-
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        setIsAnimated(true);
-      },
-      index * calculatedStaggerDelay * 1000
-    );
-    return () => clearTimeout(timeout);
-  }, [index, calculatedStaggerDelay]);
-
-  const h = isAnimated ? barHeight : 0;
-  const yi = isAnimated ? y : innerHeight;
+  const enterAnim = transitionWithDelay(
+    enterTransition,
+    index * calculatedStaggerDelay
+  );
 
   return (
     <motion.rect
-      animate={{ opacity: isFaded ? fadedOpacity : 1 }}
+      animate={{
+        height: barHeight,
+        y,
+        opacity: isFaded ? fadedOpacity : 1,
+      }}
       fill={fill}
-      height={h}
+      initial={{ height: 0, y: innerHeight, opacity: 1 }}
+      key={`series-bar-${index}-${revealEpoch}`}
       rx={radius}
       ry={radius}
-      style={{
-        transition: `height ${animationDuration}ms ${animationEasing}, y ${animationDuration}ms ${animationEasing}`,
-      }}
-      transition={{ opacity: { duration: 0.12 } }}
+      transition={enterAnim}
       width={barWidth}
       x={x}
-      y={yi}
     />
   );
 }

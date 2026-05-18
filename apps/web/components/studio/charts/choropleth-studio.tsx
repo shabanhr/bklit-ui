@@ -7,6 +7,7 @@ import {
   ChoroplethGraticule,
   ChoroplethTooltip,
 } from "@bklitui/ui/charts";
+import type { Transition } from "motion/react";
 import { useWorldDataStandalone } from "@/components/docs/use-world-data";
 import { visitorsByCountry } from "@/lib/studio/demo-data";
 import type { PatternPresetId } from "@/lib/studio/patterns";
@@ -46,12 +47,18 @@ export function ChoroplethStudioPreview({
   bgPattern,
   fgPattern,
   animationDuration,
+  animationEasing: _animationEasing,
+  enterTransition,
+  revealSignature: _revealSignature,
 }: {
   showGraticule: boolean;
   analytics: boolean;
   bgPattern: PatternPresetId;
   fgPattern: PatternPresetId;
   animationDuration: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
 }) {
   const { worldData, isLoading } = useWorldDataStandalone();
 
@@ -72,6 +79,8 @@ export function ChoroplethStudioPreview({
       animationDuration={animationDuration}
       className="size-full"
       data={worldData}
+      enterTransition={enterTransition}
+      revealSignature={_revealSignature}
     >
       {showGraticule ? <ChoroplethGraticule /> : null}
 

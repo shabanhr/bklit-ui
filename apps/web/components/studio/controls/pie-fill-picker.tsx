@@ -50,7 +50,7 @@ export function PieFillPicker({
       {options.map((opt) => (
         <button
           className={cn(
-            "flex h-11 items-center gap-2 rounded-lg border px-3 transition-colors",
+            "flex h-9 items-center gap-2 rounded-lg border px-2.5 transition-colors",
             value === opt.id
               ? "border-accent bg-accent/10 text-accent"
               : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
@@ -59,7 +59,7 @@ export function PieFillPicker({
           onClick={() => onChange(opt.id)}
           type="button"
         >
-          <span className="size-8 shrink-0 overflow-hidden rounded-md ring-1 ring-border">
+          <span className="size-5 shrink-0 overflow-hidden rounded ring-1 ring-border">
             {opt.swatch}
           </span>
           <span className="text-xs">{opt.label}</span>

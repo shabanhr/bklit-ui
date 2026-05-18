@@ -5,6 +5,8 @@ import type { StudioUrlState } from "./studio-parsers";
 
 export type { ChartSlug } from "@/components/charts/chart-slugs";
 
+export type NumberControlPreview = "ringWidth" | "ringGap" | "ringScale";
+
 interface NumberControlBase {
   key: keyof StudioUrlState;
   label: string;
@@ -14,6 +16,8 @@ interface NumberControlBase {
   format?: (v: number) => string;
   /** `number` = typed input; `slider` = drag (default) */
   input?: "slider" | "number";
+  /** Live SVG preview while dragging (ring chart controls). */
+  preview?: NumberControlPreview;
 }
 
 export type StudioControl =
@@ -65,8 +69,10 @@ export interface StudioChartConfig {
   controls: StudioControl[];
   /** Grouped sidebar sections (takes precedence over `controls` in the studio UI) */
   controlGroups?: StudioControlGroup[];
-  /** When set, sidebar shows a Motion section at the top. */
-  motionPanel?: "gauge" | "css-reveal" | "motion-enter" | "motion-stagger";
+  /** When true, sidebar shows the motion spline editor at the top. */
+  motionPanel?: boolean;
+  /** Show stagger scale slider in Motion (gauge, radar, funnel). */
+  motionStagger?: boolean;
   supportsPatterns?: boolean;
   supportsCurves?: boolean;
   render: (state: StudioUrlState, ctx: StudioRenderContext) => ReactNode;

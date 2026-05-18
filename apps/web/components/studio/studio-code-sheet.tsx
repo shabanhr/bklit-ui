@@ -1,10 +1,13 @@
 "use client";
 
+import { InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PackageManagerTabs } from "@/components/docs/package-manager-tabs";
 import { V0Icon } from "@/components/icons/v0";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -92,6 +95,15 @@ export function StudioCodeSheet({ state }: { state: StudioUrlState }) {
         </SheetHeader>
         {open ? (
           <div className="space-y-6 px-6 pb-6">
+            <Alert variant="indigo">
+              <HugeiconsIcon icon={InformationCircleIcon} strokeWidth={2} />
+              <AlertTitle>Motion settings not in snippet yet</AlertTitle>
+              <AlertDescription>
+                Enter animations from the Motion panel are not included in this
+                code export yet. They will be added in a future update — copy
+                duration and easing from the studio when wiring your chart.
+              </AlertDescription>
+            </Alert>
             <section className="space-y-2">
               <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Install
@@ -104,14 +116,17 @@ export function StudioCodeSheet({ state }: { state: StudioUrlState }) {
               </h3>
               <DocsCodeBlock code={code} lang="tsx" />
             </section>
-            {data ? (
-              <section className="space-y-2">
-                <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                  Data
-                </h3>
-                <DocsCodeBlock code={data} lang="tsx" />
-              </section>
-            ) : null}
+            <section className="space-y-2">
+              <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+                Data
+              </h3>
+              <DocsCodeBlock
+                code={
+                  data ?? "// Example data for this chart is not available yet."
+                }
+                lang="tsx"
+              />
+            </section>
           </div>
         ) : null}
       </SheetContent>

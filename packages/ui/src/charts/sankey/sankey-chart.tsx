@@ -3,6 +3,7 @@
 import { localPoint } from "@visx/event";
 import { ParentSize } from "@visx/responsive";
 import { sankey, sankeyCenter, sankeyLinkHorizontal } from "@visx/sankey";
+import type { Transition } from "motion/react";
 import {
   type ReactNode,
   useCallback,
@@ -32,6 +33,10 @@ export interface SankeyChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 1100 */
   animationDuration?: number;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers enter replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Node width in pixels. Default: 16 */
@@ -52,6 +57,8 @@ function SankeyChartInner({
   height,
   margin,
   animationDuration,
+  enterTransition,
+  revealSignature = "",
   nodeWidth,
   nodePadding,
   children,
@@ -61,12 +68,15 @@ function SankeyChartInner({
   height: number;
   margin: Margin;
   animationDuration: number;
+  enterTransition?: Transition;
+  revealSignature?: string;
   nodeWidth: number;
   nodePadding: number;
   children: ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [revealEpoch, setRevealEpoch] = useState(0);
   const [hoveredNodeIndex, setHoveredNodeIndex] = useState<number | null>(null);
   const [hoveredLinkIndex, setHoveredLinkIndex] = useState<number | null>(null);
   const [tooltipData, setTooltipData] = useState<SankeyTooltipData | null>(
@@ -79,12 +89,15 @@ function SankeyChartInner({
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
   useEffect(() => {
+    setRevealEpoch((n) => n + 1);
+    setIsLoaded(false);
     const timeout = setTimeout(() => {
       setIsLoaded(true);
     }, animationDuration);
     return () => clearTimeout(timeout);
-  }, [animationDuration]);
+  }, [animationDuration, revealSignature]);
 
   const sankeyGenerator = useMemo(() => {
     return sankey<SankeyNodeDatum, SankeyLinkDatum>()
@@ -154,6 +167,8 @@ function SankeyChartInner({
     containerRef,
     isLoaded,
     animationDuration,
+    enterTransition,
+    revealEpoch,
     mousePos,
     createPath,
   };
@@ -181,6 +196,8 @@ export function SankeyChart({
   data,
   margin: marginProp,
   animationDuration = 1100,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   nodeWidth = 16,
   nodePadding = 24,
@@ -196,10 +213,12 @@ export function SankeyChart({
           <SankeyChartInner
             animationDuration={animationDuration}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
             nodePadding={nodePadding}
             nodeWidth={nodeWidth}
+            revealSignature={revealSignature}
             width={width}
           >
             {children}

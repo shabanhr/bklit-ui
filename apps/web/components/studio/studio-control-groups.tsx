@@ -2,9 +2,8 @@
 
 import { ControlField } from "@/components/studio/controls/control-field";
 import { isGroupLabeledControlType } from "@/components/studio/controls/control-field-helpers";
-import { CssRevealMotionControl } from "@/components/studio/controls/css-reveal-motion-control";
 import { MotionControl } from "@/components/studio/controls/motion-control";
-import { MotionStaggerControl } from "@/components/studio/controls/motion-stagger-control";
+import { MotionResetButton } from "@/components/studio/controls/motion-reset-button";
 import { StudioControlGroup } from "@/components/studio/studio-control-group";
 import type { StudioUrlState } from "@/lib/studio/studio-parsers";
 import type {
@@ -16,6 +15,7 @@ export function StudioControlGroups({
   groups,
   state,
   motionPanel,
+  motionStagger,
   onChange,
   onPreview,
   onCommit,
@@ -23,6 +23,7 @@ export function StudioControlGroups({
   groups: StudioControlGroupConfig[];
   state: StudioUrlState;
   motionPanel?: StudioChartConfig["motionPanel"];
+  motionStagger?: StudioChartConfig["motionStagger"];
   onChange: <K extends keyof StudioUrlState>(
     key: K,
     value: StudioUrlState[K]
@@ -38,41 +39,19 @@ export function StudioControlGroups({
 }) {
   return (
     <div className="studio-control-groups w-full min-w-0 space-y-7 pb-4">
-      {motionPanel === "gauge" ? (
-        <StudioControlGroup className="studio-motion-section" title="Motion">
+      {motionPanel ? (
+        <StudioControlGroup
+          className="studio-motion-section"
+          title="Motion"
+          titleTrailing={
+            <MotionResetButton onCommit={onCommit} state={state} />
+          }
+        >
           <MotionControl
             onChange={onChange}
             onCommit={onCommit}
             onPreview={onPreview}
-            state={state}
-          />
-        </StudioControlGroup>
-      ) : null}
-      {motionPanel === "css-reveal" ? (
-        <StudioControlGroup className="studio-motion-section" title="Motion">
-          <CssRevealMotionControl
-            onChange={onChange}
-            onCommit={onCommit}
-            onPreview={onPreview}
-            state={state}
-          />
-        </StudioControlGroup>
-      ) : null}
-      {motionPanel === "motion-enter" ? (
-        <StudioControlGroup className="studio-motion-section" title="Motion">
-          <MotionControl
-            onChange={onChange}
-            onCommit={onCommit}
-            onPreview={onPreview}
-            state={state}
-          />
-        </StudioControlGroup>
-      ) : null}
-      {motionPanel === "motion-stagger" ? (
-        <StudioControlGroup className="studio-motion-section" title="Motion">
-          <MotionStaggerControl
-            onCommit={onCommit}
-            onPreview={onPreview}
+            showStaggerScale={motionStagger}
             state={state}
           />
         </StudioControlGroup>

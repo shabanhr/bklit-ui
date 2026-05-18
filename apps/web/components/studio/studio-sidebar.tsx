@@ -34,6 +34,7 @@ export function StudioSidebar() {
           <StudioControlGroups
             groups={groups}
             motionPanel={config.motionPanel}
+            motionStagger={config.motionStagger}
             onChange={setParam}
             onCommit={commitParam}
             onPreview={setPreviewParam}

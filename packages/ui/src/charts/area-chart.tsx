@@ -1,6 +1,7 @@
 "use client";
 
 import { ParentSize } from "@visx/responsive";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -24,6 +25,10 @@ export interface AreaChartProps {
   animationDuration?: number;
   /** CSS easing for clip-reveal. Default: cubic-bezier(0.85, 0, 0.15, 1) */
   animationEasing?: string;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers reveal replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -77,6 +82,8 @@ interface ChartInnerProps {
   margin: Margin;
   animationDuration: number;
   animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -89,6 +96,8 @@ function ChartInner({
   margin,
   animationDuration,
   animationEasing,
+  enterTransition,
+  revealSignature,
   children,
   containerRef,
 }: ChartInnerProps) {
@@ -101,9 +110,11 @@ function ChartInner({
       clipPathId="chart-area-grow-clip"
       containerRef={containerRef}
       data={data}
+      enterTransition={enterTransition}
       height={height}
       lines={lines}
       margin={margin}
+      revealSignature={revealSignature}
       width={width}
       xDataKey={xDataKey}
     >
@@ -118,6 +129,8 @@ export function AreaChart({
   margin: marginProp,
   animationDuration = 1100,
   animationEasing,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   children,
@@ -138,8 +151,10 @@ export function AreaChart({
             animationEasing={animationEasing}
             containerRef={containerRef}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
+            revealSignature={revealSignature}
             width={width}
             xDataKey={xDataKey}
           >

@@ -47,7 +47,7 @@ export function ChartTypeSelector({
         align="start"
         className="w-[min(18rem,calc(100vw-2rem))] p-2"
         side="right"
-        sideOffset={10}
+        sideOffset={-5}
       >
         <p className="px-2 py-1.5 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
           Chart type

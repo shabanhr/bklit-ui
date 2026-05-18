@@ -1,6 +1,7 @@
 "use client";
 
 import { SliderInputGroup } from "@/components/studio/controls/slider-input-group";
+import { motionDurationToAnimationMs } from "@/lib/studio/chart-animation";
 import {
   MOTION_EASE_IDS,
   MOTION_EASE_PRESETS,
@@ -41,11 +42,14 @@ function MotionTypeToggle({
 
 export function MotionControl({
   state,
+  showStaggerScale = false,
   onChange,
   onPreview,
   onCommit,
 }: {
   state: StudioUrlState;
+  /** Stagger multiplier for charts with sequenced enter (gauge, radar, funnel). */
+  showStaggerScale?: boolean;
   onChange: <K extends keyof StudioUrlState>(
     key: K,
     value: StudioUrlState[K]
@@ -59,6 +63,12 @@ export function MotionControl({
     value: StudioUrlState[K]
   ) => void;
 }) {
+  const syncDuration = (seconds: number, commit: boolean) => {
+    const ms = motionDurationToAnimationMs(seconds);
+    const apply = commit ? onCommit : onPreview;
+    apply("motionDuration", seconds);
+    apply("animationDuration", ms);
+  };
   const motionSlice = {
     motionType: state.motionType,
     motionDuration: state.motionDuration,
@@ -85,11 +95,23 @@ export function MotionControl({
           label="Duration (s)"
           max={2}
           min={0.2}
-          onCommit={(v) => onCommit("motionDuration", v)}
-          onPreview={(v) => onPreview("motionDuration", v)}
+          onCommit={(v) => syncDuration(v, true)}
+          onPreview={(v) => syncDuration(v, false)}
           step={0.1}
           value={state.motionDuration}
         />
+
+        {showStaggerScale ? (
+          <SliderInputGroup
+            label="Stagger"
+            max={2}
+            min={0.25}
+            onCommit={(v) => onCommit("motionStaggerScale", v)}
+            onPreview={(v) => onPreview("motionStaggerScale", v)}
+            step={0.05}
+            value={state.motionStaggerScale}
+          />
+        ) : null}
 
         {state.motionType === "spring" ? (
           <SliderInputGroup

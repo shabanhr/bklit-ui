@@ -8,15 +8,9 @@ import { AreaClosed, LinePath } from "@visx/shape";
 type CurveFactory = any;
 
 import { motion, useMotionTemplate, useSpring } from "motion/react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useId, useMemo, useRef } from "react";
 import { chartCssVars, useChart } from "./chart-context";
+import { ChartRevealClip } from "./chart-reveal-clip";
 
 export interface AreaProps {
   /** Key in data to use for y values */
@@ -65,13 +59,12 @@ export function Area({
     tooltipData,
     selection,
     isLoaded,
-    animationDuration,
-    animationEasing,
+    enterTransition,
+    revealEpoch,
     xAccessor,
   } = useChart();
 
   const pathRef = useRef<SVGPathElement>(null);
-  const [clipWidth, setClipWidth] = useState(0);
 
   // Unique IDs for this area
   const uniqueId = useId();
@@ -212,19 +205,7 @@ export function Area({
   // Create animated strokeDasharray using motion template
   const animatedDasharray = useMotionTemplate`${segmentLengthSpring} ${chordMetrics.total}`;
 
-  useEffect(() => {
-    if (!(animate && data.length > 1)) {
-      return;
-    }
-    if (!isLoaded) {
-      requestAnimationFrame(() => {
-        setClipWidth(innerWidth);
-      });
-    }
-  }, [animate, innerWidth, isLoaded, data.length]);
-
   const isHovering = tooltipData !== null || selection?.active === true;
-  const easing = animationEasing ?? "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
     <>
@@ -303,27 +284,26 @@ export function Area({
       </defs>
 
       {/* Clip path for grow animation - unique per area */}
-      {animate && (
+      {animate && data.length > 1 ? (
         <defs>
-          <clipPath id={`grow-clip-area-${dataKey}`}>
-            <rect
-              height={innerHeight + 20}
-              style={{
-                transition:
-                  !isLoaded && clipWidth > 0
-                    ? `width ${animationDuration}ms ${easing}`
-                    : "none",
-              }}
-              width={isLoaded ? innerWidth : clipWidth}
-              x={0}
-              y={0}
-            />
-          </clipPath>
+          <ChartRevealClip
+            clipPathId={`grow-clip-area-${dataKey}`}
+            enterTransition={enterTransition}
+            height={innerHeight + 20}
+            revealEpoch={revealEpoch ?? 0}
+            targetWidth={innerWidth}
+          />
         </defs>
-      )}
+      ) : null}
 
       {/* Main area with clip path */}
-      <g clipPath={animate ? `url(#grow-clip-area-${dataKey})` : undefined}>
+      <g
+        clipPath={
+          animate && data.length > 1
+            ? `url(#grow-clip-area-${dataKey})`
+            : undefined
+        }
+      >
         <motion.g
           animate={{ opacity: isHovering && showHighlight ? 0.6 : 1 }}
           initial={{ opacity: 1 }}

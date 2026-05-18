@@ -1,9 +1,10 @@
 "use client";
 
 import { Arc, arc as arcGenerator } from "@visx/shape";
-import { motion, useSpring, useTransform } from "motion/react";
+import { motion, useTransform } from "motion/react";
 import { useEffect, useRef } from "react";
 import { ringCssVars, useRing } from "./ring-context";
+import { useMountProgress } from "./use-mount-progress";
 
 // Helper to generate arc path using d3 arc generator
 function generateArcPath(
@@ -67,31 +68,24 @@ function AnimatedProgressArc({
   startAngle,
   arcRange,
 }: AnimatedProgressArcProps) {
+  const {
+    enterTransition,
+    enterStaggerScale,
+    animationKey: ringAnimationKey,
+  } = useRing();
   const targetEndAngle = startAngle + arcRange * progress;
   const cornerRadius =
     lineCap === "round" ? (outerRadius - innerRadius) / 2 : 0;
 
   // Progress arc delay - starts after background rings expand
-  const progressDelay = 0.6 + index * 0.1;
+  const progressDelay = (0.6 + index * 0.1) * enterStaggerScale;
+  const mountProgress = useMountProgress(
+    enterTransition,
+    progressDelay,
+    ringAnimationKey
+  );
 
-  // Animate the end angle with spring
-  const springValue = useSpring(0, {
-    stiffness: 60,
-    damping: 20,
-    restDelta: 0.001,
-  });
-
-  // Reset and start animation on mount
-  useEffect(() => {
-    springValue.jump(0);
-    const timeout = setTimeout(() => {
-      springValue.set(1);
-    }, progressDelay * 1000);
-    return () => clearTimeout(timeout);
-  }, [progressDelay, springValue]);
-
-  // Transform spring value to arc path
-  const animatedPath = useTransform(springValue, (v) => {
+  const animatedPath = useTransform(mountProgress, (v) => {
     const currentEndAngle = startAngle + (targetEndAngle - startAngle) * v;
     if (currentEndAngle <= startAngle + 0.01) {
       return "";
@@ -150,6 +144,7 @@ export function Ring({
     hoveredIndex,
     setHoveredIndex,
     animationKey,
+    enterStaggerScale,
     getColor,
     getRingRadii,
     startAngle: ctxStartAngle,
@@ -158,9 +153,8 @@ export function Ring({
 
   const arcRange = ctxEndAngle - ctxStartAngle;
 
-  // Track if initial mount animation is complete (must be before early return)
   const hasAnimated = useRef(false);
-  const ringExpandDelay = index * 0.08;
+  const ringExpandDelay = index * 0.08 * enterStaggerScale;
 
   useEffect(() => {
     if (animate && !hasAnimated.current) {

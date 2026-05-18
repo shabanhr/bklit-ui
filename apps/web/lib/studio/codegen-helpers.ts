@@ -9,6 +9,7 @@ import {
   composedDemoData,
   funnelData,
   lineHeroData,
+  liveLineSampleData,
   radarDataDual,
   radarMetrics5,
   ringData,
@@ -68,7 +69,8 @@ export function gaugeCodegen(state: StudioUrlState) {
       ? ""
       : '\n  activeFill="url(#studio-pattern-fill)"';
 
-  return `import { Gauge${state.pattern === "none" ? "" : ", PatternLines"} } from "@bklitui/ui/charts";
+  return {
+    code: `import { Gauge${state.pattern === "none" ? "" : ", PatternLines"} } from "@bklitui/ui/charts";
 
 <Gauge
   value={${state.value}}
@@ -86,7 +88,9 @@ export function gaugeCodegen(state: StudioUrlState) {
   defaultLabel="${state.gaugeLabel}"
   formatOptions={{ style: "currency", currency: "USD", maximumFractionDigits: 0 }}${activeFill}
   ${motionEnterPropsCodegen(motionSliceFromState(state), state.motionStaggerScale)}
->${patternChild}</Gauge>`;
+>${patternChild}</Gauge>`,
+    data: gaugeDataSnippet(state),
+  };
 }
 
 export function barCodegen(state: StudioUrlState) {
@@ -171,7 +175,9 @@ import { ${curveName} } from "@visx/curve";
 
 export function ringCodegen(state: StudioUrlState) {
   return {
-    code: `<RingChart data={ringData} size={${state.pieSize}}
+    code: `import { RingChart, Ring, RingCenter } from "@bklitui/ui/charts";
+
+<RingChart data={ringData} size={${state.pieSize}}
   ${cssRevealAnimationCodegen(state.animationDuration, motionSliceFromState(state))} strokeWidth={${state.strokeWidth}} ringGap={${state.ringGap}} baseInnerRadius={${state.ringBaseInnerRadius}}>
   {ringData.map((_, i) => <Ring index={i} key={i} />)}
   <RingCenter defaultLabel="Channels" />
@@ -275,7 +281,7 @@ import { ${curveName} } from "@visx/curve";
   <LiveXAxis />
   <LiveYAxis />
 </LiveLineChart>`,
-    data: `// Stream points: { time: number; value: number }[]\n// Update every ${state.liveInterval}ms`,
+    data: liveLineDataSnippet(state.liveInterval),
   };
 }
 
@@ -297,4 +303,21 @@ export function lineChartDataSnippet() {
 
 export function areaChartDataSnippet() {
   return `const chartData = ${JSON.stringify(areaData, null, 2)};`;
+}
+
+export function gaugeDataSnippet(state: StudioUrlState) {
+  return `// Gauge is driven by props — bind to your metrics
+const gaugeValue = ${state.value};
+const gaugeCenterValue = ${state.centerValue};`;
+}
+
+export function liveLineDataSnippet(intervalMs = 750) {
+  return `const data = ${JSON.stringify(liveLineSampleData, null, 2)};
+// Append { time: Date.now(), value } on an interval (e.g. every ${intervalMs}ms)`;
+}
+
+export function choroplethDataSnippet() {
+  return `// GeoJSON FeatureCollection — import your regions (e.g. world countries)
+// const geojson = await fetch("/geo/world-countries.json").then((r) => r.json());
+import geojson from "./your-regions.geojson";`;
 }

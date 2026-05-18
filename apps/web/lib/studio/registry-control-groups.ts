@@ -291,6 +291,7 @@ export const ringChartControlGroups: StudioControlGroup[] = [
       label: "Scale %",
       min: 50,
       max: 100,
+      preview: "ringScale",
     },
     {
       type: "number",
@@ -298,6 +299,7 @@ export const ringChartControlGroups: StudioControlGroup[] = [
       label: "Ring width",
       min: 4,
       max: 24,
+      preview: "ringWidth",
     },
     {
       type: "number",
@@ -305,6 +307,7 @@ export const ringChartControlGroups: StudioControlGroup[] = [
       label: "Ring gap",
       min: 0,
       max: 20,
+      preview: "ringGap",
     },
     {
       type: "innerRadius",

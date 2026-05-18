@@ -2,9 +2,9 @@
 
 import { arc as arcGenerator } from "@visx/shape";
 import { motion, useSpring, useTransform } from "motion/react";
-import { useEffect, useMemo, useRef } from "react";
-import { springOptionsFromTransition } from "./motion-utils";
+import { useEffect, useRef } from "react";
 import { usePie } from "./pie-context";
+import { useMountProgress } from "./use-mount-progress";
 
 // Helper to generate arc path using d3 arc generator
 function generateArcPath(
@@ -100,23 +100,19 @@ function AnimatedSliceTranslate({
   showGlow,
   hoverOffset,
 }: AnimatedSliceTranslateProps) {
-  const animationDelay = 0.1 + index * 0.08;
+  const {
+    enterTransition,
+    enterStaggerScale,
+    animationKey: pieAnimationKey,
+  } = usePie();
+  const animationDelay = (0.1 + index * 0.08) * enterStaggerScale;
+  const mountProgress = useMountProgress(
+    enterTransition,
+    animationDelay,
+    pieAnimationKey
+  );
 
-  const mountSpring = useSpring(0, {
-    stiffness: 60,
-    damping: 20,
-    restDelta: 0.001,
-  });
-
-  useEffect(() => {
-    mountSpring.jump(0);
-    const timeout = setTimeout(() => {
-      mountSpring.set(1);
-    }, animationDelay * 1000);
-    return () => clearTimeout(timeout);
-  }, [animationDelay, mountSpring]);
-
-  const animatedPath = useTransform(mountSpring, (mount) => {
+  const animatedPath = useTransform(mountProgress, (mount) => {
     const currentEndAngle = startAngle + (endAngle - startAngle) * mount;
     if (currentEndAngle <= startAngle + 0.01) {
       return "";
@@ -191,21 +187,17 @@ function AnimatedSliceGrow({
   showGlow,
   hoverOffset,
 }: AnimatedSliceGrowProps) {
-  const { enterTransition, enterStaggerScale } = usePie();
-  const mountSpringOpts = useMemo(
-    () =>
-      springOptionsFromTransition(enterTransition, {
-        stiffness: 60,
-        damping: 20,
-      }),
-    [enterTransition]
-  );
+  const {
+    enterTransition,
+    enterStaggerScale,
+    animationKey: pieAnimationKey,
+  } = usePie();
   const animationDelay = (0.1 + index * 0.08) * enterStaggerScale;
-
-  const mountSpring = useSpring(0, {
-    ...mountSpringOpts,
-    restDelta: 0.001,
-  });
+  const mountProgress = useMountProgress(
+    enterTransition,
+    animationDelay,
+    pieAnimationKey
+  );
 
   const growSpring = useSpring(outerRadius, {
     stiffness: 400,
@@ -213,19 +205,11 @@ function AnimatedSliceGrow({
   });
 
   useEffect(() => {
-    mountSpring.jump(0);
-    const timeout = setTimeout(() => {
-      mountSpring.set(1);
-    }, animationDelay * 1000);
-    return () => clearTimeout(timeout);
-  }, [animationDelay, mountSpring]);
-
-  useEffect(() => {
     growSpring.set(isHovered ? outerRadius + hoverOffset : outerRadius);
   }, [isHovered, hoverOffset, outerRadius, growSpring]);
 
   const animatedPath = useTransform(
-    [mountSpring, growSpring],
+    [mountProgress, growSpring],
     ([mount, currentOuterRadius]) => {
       const currentEndAngle =
         startAngle + (endAngle - startAngle) * (mount as number);

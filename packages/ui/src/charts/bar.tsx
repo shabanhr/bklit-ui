@@ -1,9 +1,10 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { motion } from "motion/react";
-import { useEffect, useId, useMemo, useState } from "react";
-import { DEFAULT_ANIMATION_EASING } from "./animation";
+import { useId, useMemo } from "react";
 import { chartCssVars, useChart } from "./chart-context";
+import { transitionWithDelay } from "./motion-utils";
 
 export type BarLineCap = "round" | "butt" | number;
 export type BarAnimationType = "grow" | "fade";
@@ -45,8 +46,8 @@ interface AnimatedBarProps {
   innerHeight: number;
   fadedOpacity: number;
   staggerDelay: number;
-  animationDuration: number;
-  animationEasing: string;
+  enterTransition?: Transition;
+  revealEpoch: number;
   isHorizontal: boolean;
 }
 
@@ -64,53 +65,26 @@ function AnimatedBar({
   innerHeight,
   fadedOpacity,
   staggerDelay,
-  animationDuration,
-  animationEasing,
+  enterTransition,
+  revealEpoch,
   isHorizontal,
 }: AnimatedBarProps) {
-  const [isAnimated, setIsAnimated] = useState(false);
-
-  // Trigger animation after stagger delay
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        setIsAnimated(true);
-      },
-      index * staggerDelay * 1000
-    );
-    return () => clearTimeout(timeout);
-  }, [index, staggerDelay]);
-
-  // Calculate the duration for this bar's animation
-  // Each bar gets a proportional share of the remaining time
-  const barDuration = animationDuration * 0.6; // 60% of total duration for the animation itself
-
-  // Calculate opacity for fade animation (avoid nested ternary)
-  const getFadeOpacity = () => {
-    if (isFaded) {
-      return fadedOpacity;
-    }
-    return isAnimated ? 1 : 0;
-  };
+  const enterAnim = transitionWithDelay(enterTransition, index * staggerDelay);
 
   if (animationType === "fade") {
     return (
       <motion.rect
         animate={{
-          opacity: getFadeOpacity(),
-          filter: isAnimated ? "blur(0px)" : "blur(2px)",
+          opacity: isFaded ? fadedOpacity : 1,
+          filter: "blur(0px)",
         }}
         fill={fill}
         height={height}
         initial={{ opacity: 0, filter: "blur(2px)" }}
+        key={`fade-${index}-${revealEpoch}`}
         rx={rx}
         ry={ry}
-        style={{
-          transition: `opacity ${barDuration}ms ${animationEasing}, filter ${barDuration}ms ${animationEasing}`,
-        }}
-        transition={{
-          opacity: { duration: 0.15 },
-        }}
+        transition={enterAnim}
         width={width}
         x={x}
         y={y}
@@ -118,39 +92,25 @@ function AnimatedBar({
     );
   }
 
-  // "grow" animation - bars grow from origin using CSS transitions
-  const animatedProps = isHorizontal
-    ? {
-        width: isAnimated ? width : 0,
-        height,
-        x: 0,
-        y,
-      }
-    : {
-        width,
-        height: isAnimated ? height : 0,
-        x,
-        y: isAnimated ? y : innerHeight,
-      };
+  const initial = isHorizontal
+    ? { width: 0, height, x: 0, y }
+    : { width, height: 0, x, y: innerHeight };
+  const target = isHorizontal
+    ? { width, height, x: 0, y }
+    : { width, height, x, y };
 
   return (
     <motion.rect
       animate={{
+        ...target,
         opacity: isFaded ? fadedOpacity : 1,
       }}
       fill={fill}
-      height={animatedProps.height}
+      initial={initial}
+      key={`grow-${index}-${revealEpoch}`}
       rx={rx}
       ry={ry}
-      style={{
-        transition: `width ${barDuration}ms ${animationEasing}, height ${barDuration}ms ${animationEasing}, x ${barDuration}ms ${animationEasing}, y ${barDuration}ms ${animationEasing}`,
-      }}
-      transition={{
-        opacity: { duration: 0.15 },
-      }}
-      width={animatedProps.width}
-      x={animatedProps.x}
-      y={animatedProps.y}
+      transition={enterAnim}
     />
   );
 }
@@ -181,10 +141,9 @@ export function Bar({
     stacked,
     stackOffsets,
     animationDuration,
-    animationEasing: animationEasingProp,
+    enterTransition,
+    revealEpoch = 0,
   } = useChart();
-
-  const animationEasing = animationEasingProp ?? DEFAULT_ANIMATION_EASING;
 
   // Calculate stagger delay automatically if not provided
   // Total animation duration is ~1200ms, with 40% for stagger spread and 60% for bar animation
@@ -322,9 +281,8 @@ export function Bar({
         if (animate && !isLoaded) {
           return (
             <AnimatedBar
-              animationDuration={totalAnimDuration}
-              animationEasing={animationEasing}
               animationType={animationType}
+              enterTransition={enterTransition}
               fadedOpacity={fadedOpacity}
               fill={fill}
               height={barHeight}
@@ -333,6 +291,7 @@ export function Bar({
               isFaded={isFaded}
               isHorizontal={isHorizontal}
               key={barKey}
+              revealEpoch={revealEpoch}
               rx={effectiveRx}
               ry={effectiveRy}
               staggerDelay={calculatedStaggerDelay}

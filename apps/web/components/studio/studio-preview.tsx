@@ -8,6 +8,7 @@ import { StudioChartFrame } from "@/components/studio/studio-chart-frame";
 import { StudioChartViewport } from "@/components/studio/studio-chart-viewport";
 import { StudioCodeSheet } from "@/components/studio/studio-code-sheet";
 import { StudioPanel } from "@/components/studio/studio-panel";
+import { useStudioMotionRemountKey } from "@/components/studio/use-studio-motion-remount";
 import { useStudioState } from "@/components/studio/use-studio-state";
 import { Button } from "@/components/ui/button";
 import { presetStyle } from "@/lib/studio/color-presets";
@@ -18,6 +19,7 @@ export function StudioPreview() {
   const { state, displayState, setParam, setFrameSize, config } =
     useStudioState();
   const [animationKey, setAnimationKey] = useState(0);
+  const motionRemountKey = useStudioMotionRemountKey(displayState);
 
   const replay = useCallback(() => {
     setAnimationKey((k) => k + 1);
@@ -72,6 +74,7 @@ export function StudioPreview() {
               {(frame) => {
                 const renderCtx: StudioRenderContext = {
                   animationKey,
+                  motionRemountKey,
                   patternDefs,
                   patternFill,
                   frame,

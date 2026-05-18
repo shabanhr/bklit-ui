@@ -260,12 +260,13 @@
     overflow: visible;
   }
 
-  .studio-control-card {
-    background-color: color-mix(in oklch, var(--muted) 40%, transparent);
+  /* Motion spline editor: preview canvas colors, finer dot grid */
+  .studio-motion-curve-card {
+    background-color: var(--card);
     background-image: radial-gradient(
       circle,
-      color-mix(in oklch, var(--muted-foreground) 30%, transparent) 0.65px,
-      transparent 0
+      color-mix(in oklch, var(--foreground) 14%, transparent) 1px,
+      transparent 1px
     );
     background-size: 10px 10px;
   }

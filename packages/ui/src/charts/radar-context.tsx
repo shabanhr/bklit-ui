@@ -1,5 +1,6 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { createContext, useContext } from "react";
 
 // CSS variable references for radar chart theming
@@ -63,6 +64,10 @@ export interface RadarContextValue {
   enterDurationMs: number;
   /** Scales stagger delays between grid / campaigns / metrics */
   staggerScale: number;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Changes when motion settings change — replays enter animations. */
+  motionReplayKey: string;
 
   // Computed helpers
   getColor: (index: number) => string;

@@ -9,11 +9,14 @@ import { cn } from "@/lib/utils";
  */
 export function StudioControlGroup({
   title,
+  titleTrailing,
   children,
   className,
   fieldsClassName,
 }: {
   title: string;
+  /** Optional control aligned to the end of the group title row (e.g. reset). */
+  titleTrailing?: ReactNode;
   children: ReactNode;
   className?: string;
   fieldsClassName?: string;
@@ -23,10 +26,11 @@ export function StudioControlGroup({
       className={cn("studio-control-group flex flex-col gap-5", className)}
       data-studio-control-group={title}
     >
-      <header className="studio-control-group-header">
+      <header className="studio-control-group-header flex items-center justify-between gap-2">
         <h3 className="font-medium text-[11px] text-muted-foreground uppercase tracking-wider">
           {title}
         </h3>
+        {titleTrailing ? <div className="shrink-0">{titleTrailing}</div> : null}
       </header>
       <div
         className={cn(

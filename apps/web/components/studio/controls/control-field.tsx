@@ -6,6 +6,11 @@ import { Label } from "@/components/ui/label";
 import type { StudioUrlState } from "@/lib/studio/studio-parsers";
 import type { StudioControl } from "@/lib/studio/types";
 import {
+  RingGapPreviewIcon,
+  RingScalePreviewIcon,
+  RingWidthPreviewIcon,
+} from "../ring-preview-icons";
+import {
   ControlFieldLabel,
   isGroupLabeledControlType,
   StudioControlRow,
@@ -18,6 +23,24 @@ import { InnerRadiusControl } from "./inner-radius-control";
 import { OpacityControl } from "./opacity-control";
 import { PieEndAngleControl, PieStartAngleControl } from "./pie-angle-control";
 import { SliderInputGroup } from "./slider-input-group";
+
+function numberControlPreviewIcon(
+  preview: NonNullable<Extract<StudioControl, { type: "number" }>["preview"]>,
+  min: number,
+  max: number,
+  local: number
+) {
+  switch (preview) {
+    case "ringWidth":
+      return <RingWidthPreviewIcon max={max} min={min} value={local} />;
+    case "ringGap":
+      return <RingGapPreviewIcon max={max} min={min} value={local} />;
+    case "ringScale":
+      return <RingScalePreviewIcon max={max} min={min} value={local} />;
+    default:
+      return null;
+  }
+}
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -111,6 +134,7 @@ export function ControlField({
         />
       );
     }
+    const preview = control.preview;
     return (
       <SliderInputGroup
         format={control.format}
@@ -122,6 +146,17 @@ export function ControlField({
         }
         onPreview={(n) =>
           (onPreview ?? onChange)(key, n as StudioUrlState[typeof key])
+        }
+        renderIcon={
+          preview
+            ? (local) =>
+                numberControlPreviewIcon(
+                  preview,
+                  control.min,
+                  control.max,
+                  local
+                )
+            : undefined
         }
         step={control.step ?? 1}
         value={value as number}

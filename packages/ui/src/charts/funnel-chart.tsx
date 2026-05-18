@@ -1,5 +1,6 @@
 "use client";
 
+import type { Transition } from "motion/react";
 import { motion, useSpring, useTransform } from "motion/react";
 import {
   type CSSProperties,
@@ -10,6 +11,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import { useMountProgress } from "./use-mount-progress";
 
 // ─── Public types ───────────────────────────────────────────────────
 
@@ -51,6 +53,8 @@ export interface FunnelChartProps {
   formatValue?: (value: number) => string;
   /** Stagger delay between segments in seconds. Default 0.12 */
   staggerDelay?: number;
+  /** Framer Motion transition for segment enter animation */
+  enterTransition?: Transition;
   /** Gap between segments in pixels. Default 4 */
   gap?: number;
   /**
@@ -108,7 +112,6 @@ export interface FunnelChartProps {
 const fmtPct = (p: number) => `${Math.round(p)}%`;
 const fmtVal = (v: number) => v.toLocaleString("en-US");
 
-const springConfig = { stiffness: 120, damping: 20, mass: 1 };
 const hoverSpring = { stiffness: 300, damping: 24 };
 
 // ─── SVG helpers ────────────────────────────────────────────────────
@@ -212,6 +215,7 @@ function HSegment({
   color,
   layers,
   staggerDelay,
+  enterTransition,
   hovered,
   dimmed,
   renderPattern,
@@ -226,6 +230,7 @@ function HSegment({
   color: string;
   layers: number;
   staggerDelay: number;
+  enterTransition?: Transition;
   hovered: boolean;
   dimmed: boolean;
   renderPattern?: (id: string, color: string) => ReactNode;
@@ -234,10 +239,13 @@ function HSegment({
 }) {
   const patternId = `funnel-h-pattern-${index}`;
   const gradientId = `funnel-h-grad-${index}`;
-  // Entrance spring: drives scaleX and scaleY from 0 → 1
-  const growProgress = useSpring(0, springConfig);
-  const entranceScaleX = useTransform(growProgress, [0, 1], [0, 1]);
-  const entranceScaleY = useTransform(growProgress, [0, 1], [0, 1]);
+  const mountProgress = useMountProgress(
+    enterTransition,
+    index * staggerDelay,
+    index
+  );
+  const entranceScaleX = useTransform(mountProgress, [0, 1], [0, 1]);
+  const entranceScaleY = useTransform(mountProgress, [0, 1], [0, 1]);
 
   // Dim spring: reduces opacity when another segment is hovered
   const dimOpacity = useSpring(1, hoverSpring);
@@ -245,16 +253,6 @@ function HSegment({
   useEffect(() => {
     dimOpacity.set(dimmed ? 0.4 : 1);
   }, [dimmed, dimOpacity]);
-
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        growProgress.set(1);
-      },
-      index * staggerDelay * 1000
-    );
-    return () => clearTimeout(timeout);
-  }, [growProgress, index, staggerDelay]);
 
   const rings = Array.from({ length: layers }, (_, l) => {
     const scale = 1 - (l / layers) * 0.35;
@@ -385,6 +383,7 @@ function VSegment({
   color,
   layers,
   staggerDelay,
+  enterTransition,
   hovered,
   dimmed,
   renderPattern,
@@ -399,6 +398,7 @@ function VSegment({
   color: string;
   layers: number;
   staggerDelay: number;
+  enterTransition?: Transition;
   hovered: boolean;
   dimmed: boolean;
   renderPattern?: (id: string, color: string) => ReactNode;
@@ -407,10 +407,13 @@ function VSegment({
 }) {
   const patternId = `funnel-v-pattern-${index}`;
   const gradientId = `funnel-v-grad-${index}`;
-  // Entrance spring: drives scaleX and scaleY from 0 → 1
-  const growProgress = useSpring(0, springConfig);
-  const entranceScaleY = useTransform(growProgress, [0, 1], [0, 1]);
-  const entranceScaleX = useTransform(growProgress, [0, 1], [0, 1]);
+  const mountProgress = useMountProgress(
+    enterTransition,
+    index * staggerDelay,
+    index
+  );
+  const entranceScaleY = useTransform(mountProgress, [0, 1], [0, 1]);
+  const entranceScaleX = useTransform(mountProgress, [0, 1], [0, 1]);
 
   // Dim spring: reduces opacity when another segment is hovered
   const dimOpacity = useSpring(1, hoverSpring);
@@ -418,16 +421,6 @@ function VSegment({
   useEffect(() => {
     dimOpacity.set(dimmed ? 0.4 : 1);
   }, [dimmed, dimOpacity]);
-
-  useEffect(() => {
-    const timeout = setTimeout(
-      () => {
-        growProgress.set(1);
-      },
-      index * staggerDelay * 1000
-    );
-    return () => clearTimeout(timeout);
-  }, [growProgress, index, staggerDelay]);
 
   const rings = Array.from({ length: layers }, (_, l) => {
     const scale = 1 - (l / layers) * 0.35;
@@ -677,6 +670,7 @@ export function FunnelChart({
   formatPercentage = fmtPct,
   formatValue = fmtVal,
   staggerDelay = 0.12,
+  enterTransition,
   gap = 4,
   renderPattern,
   edges = "curved",
@@ -825,6 +819,7 @@ export function FunnelChart({
                 <HSegment
                   color={segColor}
                   dimmed={hoveredIndex !== null && hoveredIndex !== i}
+                  enterTransition={enterTransition}
                   fullH={H}
                   gradientStops={stage.gradient}
                   hovered={hoveredIndex === i}
@@ -842,6 +837,7 @@ export function FunnelChart({
                 <VSegment
                   color={segColor}
                   dimmed={hoveredIndex !== null && hoveredIndex !== i}
+                  enterTransition={enterTransition}
                   fullW={W}
                   gradientStops={stage.gradient}
                   hovered={hoveredIndex === i}
