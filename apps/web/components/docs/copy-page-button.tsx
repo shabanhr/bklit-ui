@@ -40,14 +40,14 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
   return (
     <div className="hidden md:flex">
       <Button
-        className="rounded-r-none border-r-0 text-xs"
+        className="rounded-r-none border-r-0"
         onClick={handleCopy}
-        size="sm"
+        size="default"
         variant="outline"
       >
-        <span className="relative size-3">
+        <span className="relative size-3.5">
           <CopyIcon
-            className="absolute inset-0 size-3 transition-all duration-300 ease-out"
+            className="absolute inset-0 size-3.5 transition-all duration-300 ease-out"
             style={{
               opacity: copied ? 0 : 1,
               filter: copied ? "blur(4px)" : "blur(0px)",
@@ -55,7 +55,7 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
             }}
           />
           <CheckIcon
-            className="absolute inset-0 size-3 transition-all duration-300 ease-out"
+            className="absolute inset-0 size-3.5 transition-all duration-300 ease-out"
             style={{
               opacity: copied ? 1 : 0,
               filter: copied ? "blur(0px)" : "blur(4px)",
@@ -67,13 +67,18 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="rounded-l-none px-2" size="sm" variant="outline">
-            <ChevronDownIcon className="size-4" />
+          <Button
+            className="rounded-l-none px-2.5"
+            size="default"
+            variant="outline"
+          >
+            <ChevronDownIcon />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
+        <DropdownMenuContent align="end" className="!w-auto min-w-max">
+          <DropdownMenuItem asChild className="text-sm">
             <a
+              className="whitespace-nowrap"
               href={getPromptUrl("https://chatgpt.com", fullUrl, content)}
               rel="noreferrer"
               target="_blank"
@@ -82,8 +87,9 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
               Open in ChatGPT
             </a>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="text-sm">
             <a
+              className="whitespace-nowrap"
               href={getPromptUrl("https://claude.ai/new", fullUrl, content)}
               rel="noreferrer"
               target="_blank"

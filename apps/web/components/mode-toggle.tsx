@@ -15,7 +15,7 @@ export function ModeToggle() {
 
   if (!mounted) {
     return (
-      <Button aria-label="Toggle theme" size="sm" variant="ghost">
+      <Button aria-label="Toggle theme" size="default" variant="ghost">
         <div className="size-5" />
       </Button>
     );
@@ -27,10 +27,10 @@ export function ModeToggle() {
     <Button
       aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      size="sm"
+      size="default"
       variant="ghost"
     >
-      {isDark ? <SunIcon size={18} /> : <MoonIcon size={18} />}
+      {isDark ? <SunIcon /> : <MoonIcon />}
     </Button>
   );
 }

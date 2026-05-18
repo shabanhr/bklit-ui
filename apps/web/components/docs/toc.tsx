@@ -41,11 +41,11 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <aside className="fixed top-14 right-0 hidden h-[calc(100vh-3.5rem)] w-56 overflow-hidden py-6 pr-4 xl:block">
+    <aside className="fixed top-14 right-0 hidden h-[calc(100vh-3.5rem)] w-[300px] overflow-hidden px-10 py-6 xl:block">
       <div className="flex h-full flex-col">
         {items.length > 0 && (
           <>
-            <p className="mb-3 pl-2 font-semibold text-foreground text-sm">
+            <p className="mb-3 font-semibold text-foreground text-sm">
               On this page
             </p>
             <AnchorProvider toc={items}>

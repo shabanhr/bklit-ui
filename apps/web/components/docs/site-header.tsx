@@ -16,6 +16,22 @@ interface NavLink {
   active?: "url" | "nested-url";
 }
 
+function isStudioLink(url: string) {
+  return url === "/studio";
+}
+
+function NavLinkLabel({ text, url }: { text: string; url: string }) {
+  if (!isStudioLink(url)) {
+    return text;
+  }
+  return (
+    <span className="flex items-center gap-1.5">
+      {text}
+      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-chart-1" />
+    </span>
+  );
+}
+
 interface SiteHeaderProps {
   links?: NavLink[];
   githubUrl?: string;
@@ -148,10 +164,10 @@ function MobileMenu({
               >
                 <Button
                   className="w-full justify-start"
-                  size="sm"
+                  size="default"
                   variant="ghost"
                 >
-                  {link.text}
+                  <NavLinkLabel text={link.text} url={link.url} />
                 </Button>
               </Link>
             ))}
@@ -176,7 +192,7 @@ function MobileMenu({
                 >
                   <Button
                     className="w-full justify-start"
-                    size="sm"
+                    size="default"
                     variant="ghost"
                   >
                     {component.text}
@@ -224,7 +240,7 @@ function MobileMenu({
                       >
                         <Button
                           className="w-full justify-start"
-                          size="sm"
+                          size="default"
                           variant="ghost"
                         >
                           {child.text}
@@ -248,7 +264,7 @@ function MobileMenu({
                   >
                     <Button
                       className="w-full justify-start"
-                      size="sm"
+                      size="default"
                       variant="ghost"
                     >
                       {utility.text}
@@ -273,7 +289,7 @@ function MobileMenu({
                 >
                   <Button
                     className="w-full justify-start gap-2 font-light font-mono text-muted-foreground text-xs"
-                    size="sm"
+                    size="default"
                     variant="ghost"
                   >
                     <GitHubIcon />
@@ -295,7 +311,7 @@ function MobileMenu({
                 >
                   <Button
                     className="w-full justify-start gap-2 text-muted-foreground"
-                    size="sm"
+                    size="default"
                     variant="ghost"
                   >
                     <DiscordIcon className="size-4" />
@@ -360,8 +376,8 @@ export function SiteHeader({
             <nav className="hidden items-center gap-1 md:flex">
               {links.map((link) => (
                 <Link href={link.url} key={link.url}>
-                  <Button size="sm" variant="ghost">
-                    {link.text}
+                  <Button size="default" variant="ghost">
+                    <NavLinkLabel text={link.text} url={link.url} />
                   </Button>
                 </Link>
               ))}
@@ -378,7 +394,7 @@ export function SiteHeader({
               >
                 <Button
                   className="gap-2 font-light font-mono text-muted-foreground text-xs"
-                  size="sm"
+                  size="default"
                   variant="ghost"
                 >
                   <GitHubIcon />
@@ -393,8 +409,8 @@ export function SiteHeader({
                 external
                 href={discordUrl}
               >
-                <Button size="sm" variant="ghost">
-                  <DiscordIcon className="size-4" />
+                <Button size="default" variant="ghost">
+                  <DiscordIcon />
                 </Button>
               </Link>
             )}
@@ -406,7 +422,7 @@ export function SiteHeader({
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               className="md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              size="sm"
+              size="default"
               variant="ghost"
             >
               <MenuIcon open={mobileMenuOpen} />

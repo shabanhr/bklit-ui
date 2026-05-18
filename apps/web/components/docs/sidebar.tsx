@@ -29,9 +29,9 @@ export function Sidebar({ tree, links = [] }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed top-14 left-0 hidden h-[calc(100vh-3.5rem)] w-64 overflow-hidden bg-background pl-2 lg:block">
+    <aside className="fixed top-14 left-0 hidden h-[calc(100vh-3.5rem)] w-80 overflow-hidden bg-background lg:block">
       <div className="h-full overflow-y-auto py-4 pt-9">
-        <nav className="px-3">
+        <nav className="p-10">
           {/* Top-level navigation links */}
           {links.length > 0 && (
             <ul className="m-0 mb-4 list-none space-y-0.5 p-0">
