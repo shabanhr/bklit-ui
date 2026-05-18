@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Area, type AreaProps } from "./area";
 import type { LineConfig, Margin } from "./chart-context";
+import { PatternArea } from "./pattern-area";
 import { TimeSeriesChartInner } from "./time-series-chart-shell";
 
 export interface AreaChartProps {
@@ -57,10 +58,15 @@ function extractAreaConfigs(children: ReactNode): LineConfig[] {
         : "";
 
     const props = child.props as AreaProps | undefined;
+    const isPatternArea =
+      componentName === "PatternArea" || child.type === PatternArea;
     const isAreaComponent =
       componentName === "Area" ||
       child.type === Area ||
-      (props && typeof props.dataKey === "string" && props.dataKey.length > 0);
+      (props &&
+        typeof props.dataKey === "string" &&
+        props.dataKey.length > 0 &&
+        !isPatternArea);
 
     if (isAreaComponent && props?.dataKey) {
       configs.push({

@@ -37,16 +37,16 @@ export function cartesianCodegen(
   } else if (state.pattern === "none") {
     child = `\n  <Area dataKey="${dataKey}" curve={${curveName}} fillOpacity={${state.fillOpacity}} strokeWidth={${state.strokeWidth}} fadeEdges={${state.fadeEdges}} gradientToOpacity={${state.gradientToOpacity}} showLine={${state.showLine}} showHighlight={${state.showHighlight}} />`;
   } else {
-    child = `\n  ${patternCodegenBlock(state.pattern)}\n  <Area dataKey="${dataKey}" fill="${fill}" curve={${curveName}} fillOpacity={${state.fillOpacity}} strokeWidth={${state.strokeWidth}} fadeEdges={${state.fadeEdges}} gradientToOpacity={${state.gradientToOpacity}} showLine={${state.showLine}} showHighlight={${state.showHighlight}} />`;
+    child = `\n  ${patternCodegenBlock(state.pattern)}\n  <PatternArea dataKey="${dataKey}" fill="${fill}" curve={${curveName}} />\n  <Area dataKey="${dataKey}" fillOpacity={0} curve={${curveName}} strokeWidth={${state.strokeWidth}} fadeEdges={${state.fadeEdges}} gradientToOpacity={${state.gradientToOpacity}} showLine={${state.showLine}} showHighlight={${state.showHighlight}} />`;
   }
 
   let extraImports = "";
-  if (state.pattern !== "none") {
-    extraImports = ", PatternLines";
-  } else if (chartType === "LineChart") {
+  if (chartType === "LineChart") {
     extraImports = ", Line";
-  } else {
+  } else if (state.pattern === "none") {
     extraImports = ", Area";
+  } else {
+    extraImports = ", PatternLines, PatternArea, Area";
   }
 
   return `import { ${chartType}, Grid, XAxis, ChartTooltip${extraImports} } from "@bklitui/ui/charts";

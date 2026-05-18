@@ -24,6 +24,7 @@ import {
   type Margin,
   type TooltipData,
 } from "./chart-context";
+import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 
 export type BarOrientation = "vertical" | "horizontal";
 
@@ -459,20 +460,6 @@ function ChartInner({
 
   const canInteract = isLoaded;
 
-  // Helper to check if a component is a gradient or pattern definition
-  const isDefsComponent = (child: ReactElement): boolean => {
-    const displayName =
-      (child.type as { displayName?: string })?.displayName ||
-      (child.type as { name?: string })?.name ||
-      "";
-    return (
-      displayName.includes("Gradient") ||
-      displayName.includes("Pattern") ||
-      displayName === "LinearGradient" ||
-      displayName === "RadialGradient"
-    );
-  };
-
   // Separate children into defs, pre-overlay, and post-overlay
   const defsChildren: ReactElement[] = [];
   const preOverlayChildren: ReactElement[] = [];
@@ -483,8 +470,10 @@ function ChartInner({
       return;
     }
 
-    if (isDefsComponent(child)) {
+    if (isGradientDefComponent(child)) {
       defsChildren.push(child);
+    } else if (isPatternDefComponent(child)) {
+      preOverlayChildren.push(child);
     } else if (isPostOverlayComponent(child)) {
       postOverlayChildren.push(child);
     } else {

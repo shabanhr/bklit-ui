@@ -46,14 +46,31 @@ export function studioEnterStaggerScale(state: StudioUrlState): number {
   return motionStaggerScale(state) * state.motionStaggerScale;
 }
 
-export function getStudioCssRevealProps(state: StudioUrlState) {
+export function getStudioCssRevealProps(
+  state: StudioUrlState,
+  options?: { revealFrom?: StudioUrlState }
+) {
   const motion = motionSliceFromState(state);
+  const revealMotion = options?.revealFrom
+    ? motionSliceFromState(options.revealFrom)
+    : motion;
   return {
     animationDuration: studioAnimationDurationMs(state),
     animationEasing: studioAnimationEasingCss(motion),
     enterTransition: studioMotionToTransition(motion),
-    revealSignature: motionSignature(motion),
+    revealSignature: motionSignature(revealMotion),
   };
+}
+
+/** CSS reveal props for studio preview (live easing, stable reveal while dragging handles). */
+export function getStudioCssRevealPropsForPreview(
+  displayState: StudioUrlState,
+  ctx: Pick<StudioRenderContext, "motionCurveDragging" | "committedState">
+) {
+  return getStudioCssRevealProps(
+    displayState,
+    ctx.motionCurveDragging ? { revealFrom: ctx.committedState } : undefined
+  );
 }
 
 /** Chart remount key: manual replay + debounced motion signature. */

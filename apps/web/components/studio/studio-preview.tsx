@@ -16,8 +16,14 @@ import { StudioPatternDefs, studioPatternFill } from "@/lib/studio/patterns";
 import type { StudioRenderContext } from "@/lib/studio/render-context";
 
 export function StudioPreview() {
-  const { state, displayState, setParam, setFrameSize, config } =
-    useStudioState();
+  const {
+    state,
+    displayState,
+    setParam,
+    setFrameSize,
+    config,
+    motionCurveDragging,
+  } = useStudioState();
   const [animationKey, setAnimationKey] = useState(0);
   const motionRemountKey = useStudioMotionRemountKey(displayState);
 
@@ -75,6 +81,8 @@ export function StudioPreview() {
                 const renderCtx: StudioRenderContext = {
                   animationKey,
                   motionRemountKey,
+                  committedState: state,
+                  motionCurveDragging,
                   patternDefs,
                   patternFill,
                   frame,

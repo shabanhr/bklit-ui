@@ -19,6 +19,7 @@ export function StudioControlGroups({
   onChange,
   onPreview,
   onCommit,
+  onMotionCurveDragActiveChange,
 }: {
   groups: StudioControlGroupConfig[];
   state: StudioUrlState;
@@ -36,6 +37,7 @@ export function StudioControlGroups({
     key: K,
     value: StudioUrlState[K]
   ) => void;
+  onMotionCurveDragActiveChange?: (dragging: boolean) => void;
 }) {
   return (
     <div className="studio-control-groups w-full min-w-0 space-y-7 pb-4">
@@ -50,6 +52,7 @@ export function StudioControlGroups({
           <MotionControl
             onChange={onChange}
             onCommit={onCommit}
+            onMotionCurveDragActiveChange={onMotionCurveDragActiveChange}
             onPreview={onPreview}
             showStaggerScale={motionStagger}
             state={state}

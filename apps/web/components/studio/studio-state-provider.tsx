@@ -45,6 +45,9 @@ interface StudioStateContextValue {
     value: StudioUrlState[K]
   ) => void;
   setFrameSize: (width: number, height: number) => void;
+  /** True while dragging bezier handles — avoids replaying chart reveal every frame. */
+  motionCurveDragging: boolean;
+  setMotionCurveDragging: (dragging: boolean) => void;
 }
 
 const StudioStateContext = createContext<StudioStateContextValue | null>(null);
@@ -62,6 +65,7 @@ export function StudioStateProvider({
   const [previewOverrides, setPreviewOverrides] = useState<
     Partial<StudioUrlState>
   >({});
+  const [motionCurveDragging, setMotionCurveDragging] = useState(false);
 
   const state = useMemo(
     (): StudioUrlState => ({
@@ -93,6 +97,7 @@ export function StudioStateProvider({
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset slider previews when chart changes via URL
   useEffect(() => {
     setPreviewOverrides({});
+    setMotionCurveDragging(false);
   }, [params.chart]);
 
   const config = useMemo(() => getStudioConfig(state.chart), [state.chart]);
@@ -172,11 +177,14 @@ export function StudioStateProvider({
       setPreviewParam,
       commitParam,
       setFrameSize,
+      motionCurveDragging,
+      setMotionCurveDragging,
     }),
     [
       commitParam,
       config,
       displayState,
+      motionCurveDragging,
       setChart,
       setFrameSize,
       setParam,

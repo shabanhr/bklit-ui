@@ -14,6 +14,7 @@ import {
   Line,
   LinearGradient,
   LineChart,
+  PatternArea,
   RadarArea,
   RadarAxis,
   RadarChart,
@@ -31,7 +32,6 @@ import { ChoroplethStudioPreview } from "@/components/studio/charts/choropleth-s
 import { FunnelStudioPreview } from "@/components/studio/charts/funnel-studio-preview";
 import { GaugeStudioPreview } from "@/components/studio/charts/gauge-studio-preview";
 import { LiveLineStudioPreview } from "@/components/studio/charts/live-line-studio";
-import { StudioPatternArea } from "@/components/studio/charts/pattern-area";
 import { PieStudioPreview } from "@/components/studio/charts/pie-studio-preview";
 import { RingStudioPreview } from "@/components/studio/charts/ring-studio-preview";
 import {
@@ -40,7 +40,7 @@ import {
   studioRadialSize,
 } from "@/components/studio/charts/studio-chart-layout";
 import {
-  getStudioCssRevealProps,
+  getStudioCssRevealPropsForPreview,
   getStudioMotionEnterProps,
   motionSliceFromState,
   studioAnimationDurationMs,
@@ -120,7 +120,7 @@ const areaConfig: StudioChartConfig = {
     return (
       <StudioCartesianFill>
         <AreaChart
-          {...getStudioCssRevealProps(state)}
+          {...getStudioCssRevealPropsForPreview(state, ctx)}
           className="size-full"
           data={areaData}
           key={studioPreviewChartKey(ctx)}
@@ -128,19 +128,18 @@ const areaConfig: StudioChartConfig = {
           <Grid horizontal />
           {ctx.patternDefs}
           {fill ? (
-            <StudioPatternArea curve={curve} dataKey="desktop" fill={fill} />
-          ) : (
-            <Area
-              curve={curve}
-              dataKey="desktop"
-              fadeEdges={state.fadeEdges}
-              fillOpacity={state.fillOpacity}
-              gradientToOpacity={state.gradientToOpacity}
-              showHighlight={state.showHighlight}
-              showLine={state.showLine}
-              strokeWidth={state.strokeWidth}
-            />
-          )}
+            <PatternArea curve={curve} dataKey="desktop" fill={fill} />
+          ) : null}
+          <Area
+            curve={curve}
+            dataKey="desktop"
+            fadeEdges={fill ? false : state.fadeEdges}
+            fillOpacity={fill ? 0 : state.fillOpacity}
+            gradientToOpacity={state.gradientToOpacity}
+            showHighlight={state.showHighlight}
+            showLine={state.showLine}
+            strokeWidth={state.strokeWidth}
+          />
           <XAxis />
           <ChartTooltip />
         </AreaChart>
@@ -163,7 +162,7 @@ const lineConfig: StudioChartConfig = {
   render: (state, ctx) => (
     <StudioCartesianFill>
       <LineChart
-        {...getStudioCssRevealProps(state)}
+        {...getStudioCssRevealPropsForPreview(state, ctx)}
         className="size-full"
         data={lineHeroData}
         key={studioPreviewChartKey(ctx)}
@@ -215,7 +214,7 @@ const barConfig: StudioChartConfig = {
     return (
       <StudioCartesianFill>
         <BarChart
-          {...getStudioCssRevealProps(state)}
+          {...getStudioCssRevealPropsForPreview(state, ctx)}
           barGap={state.barGap}
           barWidth={state.barWidth > 0 ? state.barWidth : undefined}
           className="size-full"
@@ -273,7 +272,7 @@ const composedConfig: StudioChartConfig = {
     return (
       <StudioCartesianFill>
         <ComposedChart
-          {...getStudioCssRevealProps(state)}
+          {...getStudioCssRevealPropsForPreview(state, ctx)}
           className="size-full"
           data={composedDemoData}
           key={studioPreviewChartKey(ctx)}
@@ -425,7 +424,7 @@ const candlestickConfig: StudioChartConfig = {
     return (
       <StudioCartesianFill>
         <CandlestickChart
-          {...getStudioCssRevealProps(state)}
+          {...getStudioCssRevealPropsForPreview(state, ctx)}
           candleGap={state.candleGap}
           className="size-full"
           data={candlestickOhlcData}
@@ -513,7 +512,7 @@ const choroplethConfig: StudioChartConfig = {
     <StudioCartesianFill>
       <ChoroplethStudioPreview
         analytics={state.choroplethAnalytics}
-        {...getStudioCssRevealProps(state)}
+        {...getStudioCssRevealPropsForPreview(state, ctx)}
         bgPattern={state.choroplethBgPattern}
         fgPattern={state.choroplethFgPattern}
         key={studioPreviewChartKey(ctx)}
@@ -556,7 +555,7 @@ const sankeyConfig: StudioChartConfig = {
   render: (state, ctx) => (
     <StudioCartesianFill>
       <SankeyChart
-        {...getStudioCssRevealProps(state)}
+        {...getStudioCssRevealPropsForPreview(state, ctx)}
         className="size-full"
         data={sankeySimple}
         key={studioPreviewChartKey(ctx)}

@@ -2,7 +2,7 @@
 
 import type { Transition } from "motion/react";
 import { motion } from "motion/react";
-import { DEFAULT_CHART_ENTER_TRANSITION } from "./animation";
+import { clipRevealTransition } from "./animation";
 
 export interface ChartRevealClipProps {
   clipPathId: string;
@@ -24,22 +24,17 @@ export function ChartRevealClip({
   enterTransition,
   revealEpoch,
 }: ChartRevealClipProps) {
-  if (targetWidth <= 0) {
-    return null;
-  }
-
-  const transition: Transition =
-    enterTransition ?? DEFAULT_CHART_ENTER_TRANSITION;
+  const transition = clipRevealTransition(enterTransition);
 
   return (
     <clipPath id={clipPathId}>
       <motion.rect
-        animate={{ width: targetWidth }}
+        animate={{ width: Math.max(0, targetWidth) }}
         height={height}
         initial={{ width: 0 }}
         key={`reveal-${revealEpoch}`}
         transition={transition}
-        width={targetWidth}
+        width={Math.max(0, targetWidth)}
         x={0}
         y={0}
       />

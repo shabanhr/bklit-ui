@@ -40,6 +40,8 @@ const MORPH_TRANSITION = {
   bounce: 0.14,
 } as const;
 
+const INSTANT_TRANSITION = { duration: 0 } as const;
+
 type DragTarget = "p1" | "p2" | null;
 
 function useCurveContainerWidth() {
@@ -67,6 +69,7 @@ export function MotionCurveEditor({
   state,
   onPreview,
   onCommit,
+  onDragActiveChange,
 }: {
   state: MotionStateSlice;
   onPreview: <K extends keyof StudioUrlState>(
@@ -77,6 +80,8 @@ export function MotionCurveEditor({
     key: K,
     value: StudioUrlState[K]
   ) => void;
+  /** While dragging handles, chart reveal should not restart on every preview tick. */
+  onDragActiveChange?: (dragging: boolean) => void;
 }) {
   const { ref: containerRef, width } = useCurveContainerWidth();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -131,7 +136,10 @@ export function MotionCurveEditor({
 
   // Morph between curves when settings change (ease ↔ spring, duration, etc.)
   useEffect(() => {
-    if (dragging || skipMorphRef.current) {
+    if (dragging) {
+      return;
+    }
+    if (skipMorphRef.current) {
       skipMorphRef.current = false;
       return;
     }
@@ -246,6 +254,7 @@ export function MotionCurveEditor({
     };
     const onUp = () => {
       setDragging(null);
+      onDragActiveChange?.(false);
       const next = dragBezierRef.current
         ? clampEaseBezierControl(dragBezierRef.current)
         : null;
@@ -263,7 +272,7 @@ export function MotionCurveEditor({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [applyHandleDrag, dragging, onCommit]);
+  }, [applyHandleDrag, dragging, onCommit, onDragActiveChange]);
 
   return (
     <div className="space-y-2">
@@ -317,6 +326,7 @@ export function MotionCurveEditor({
                         );
                         dragBezierRef.current = activeBezier;
                         setDragBezier(activeBezier);
+                        onDragActiveChange?.(true);
                         setDragging(id);
                       }}
                       r={HANDLE_R + 6}
@@ -337,16 +347,26 @@ export function MotionCurveEditor({
             </>
           ) : null}
 
-          <motion.path
-            animate={{ d: path }}
-            className="fill-none stroke-foreground"
-            d={path}
-            initial={false}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            transition={MORPH_TRANSITION}
-          />
+          {dragging ? (
+            <path
+              className="fill-none stroke-foreground"
+              d={path}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+            />
+          ) : (
+            <motion.path
+              animate={{ d: path }}
+              className="fill-none stroke-foreground"
+              d={path}
+              initial={false}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              transition={MORPH_TRANSITION}
+            />
+          )}
 
           <motion.circle
             animate={{ cx: notchPosition.x, cy: notchPosition.y }}
@@ -356,7 +376,9 @@ export function MotionCurveEditor({
             initial={false}
             r={NOTCH_R}
             strokeWidth={1.5}
-            transition={isPlaying ? { duration: 0 } : MORPH_TRANSITION}
+            transition={
+              dragging || isPlaying ? INSTANT_TRANSITION : MORPH_TRANSITION
+            }
           />
         </svg>
 

@@ -39,6 +39,7 @@ import {
   LiveYAxis,
   type MomentumColors,
   type OHLCDataPoint,
+  PatternArea,
   PatternLines,
   PieCenter,
   PieChart,
@@ -75,7 +76,6 @@ import {
   curveNatural,
   curveStep,
 } from "@visx/curve";
-import { AreaClosed } from "@visx/shape";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { motion, useSpring } from "motion/react";
 import Link from "next/link";
@@ -605,36 +605,6 @@ function ChartExampleCard({
 }
 
 // ---------------------------------------------------------------------------
-// Pattern area helper (renders AreaClosed with a pattern fill via useChart)
-// ---------------------------------------------------------------------------
-
-function PatternArea({
-  dataKey,
-  fill,
-  curve = curveMonotoneX,
-}: {
-  dataKey: string;
-  fill: string;
-  curve?: typeof curveMonotoneX;
-}) {
-  const { data, xScale, yScale, xAccessor } = useChart();
-
-  return (
-    <AreaClosed
-      curve={curve}
-      data={data}
-      fill={fill}
-      x={(d) => xScale(xAccessor(d)) ?? 0}
-      y={(d) => {
-        const v = d[dataKey];
-        return typeof v === "number" ? (yScale(v) ?? 0) : 0;
-      }}
-      yScale={yScale}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Bar line indicator (animated line that rises to bar top on hover)
 // ---------------------------------------------------------------------------
 
@@ -945,6 +915,7 @@ function makeAreaExamples(): ChartExample[] {
             strokeWidth={1}
             width={6}
           />
+          <Grid horizontal />
           <PatternArea dataKey="desktop" fill="url(#area-example-pattern)" />
           <Area dataKey="desktop" fillOpacity={0} strokeWidth={2} />
           <XAxis />

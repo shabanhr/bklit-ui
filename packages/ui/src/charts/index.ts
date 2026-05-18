@@ -14,12 +14,6 @@ export {
   LinearGradient,
   RadialGradient,
 } from "@visx/gradient";
-export {
-  PatternCircles,
-  PatternHexagons,
-  PatternLines,
-  PatternWaves,
-} from "@visx/pattern";
 // Area chart components
 export { Area, type AreaProps } from "./area";
 export { AreaChart, type AreaChartProps } from "./area-chart";
@@ -156,6 +150,7 @@ export {
   type MarkerTooltipContentProps,
   useActiveMarkers,
 } from "./markers";
+export { PatternArea, type PatternAreaProps } from "./pattern-area";
 // Pie chart components
 export { PieCenter, type PieCenterProps } from "./pie-center";
 export {
@@ -260,5 +255,11 @@ export {
   type ChartSelection,
   useChartInteraction,
 } from "./use-chart-interaction";
+export {
+  PatternCircles,
+  PatternHexagons,
+  PatternLines,
+  PatternWaves,
+} from "./visx-pattern";
 export { XAxis, type XAxisProps } from "./x-axis";
 export { YAxis, type YAxisProps } from "./y-axis";

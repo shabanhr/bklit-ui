@@ -15,6 +15,7 @@ export function StudioSidebar() {
     setParam,
     setPreviewParam,
     commitParam,
+    setMotionCurveDragging,
     config,
   } = useStudioState();
   const groups = getStudioControlGroups(config);
@@ -37,6 +38,7 @@ export function StudioSidebar() {
             motionStagger={config.motionStagger}
             onChange={setParam}
             onCommit={commitParam}
+            onMotionCurveDragActiveChange={setMotionCurveDragging}
             onPreview={setPreviewParam}
             state={displayState}
           />

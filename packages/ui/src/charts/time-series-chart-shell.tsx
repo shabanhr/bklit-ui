@@ -15,20 +15,8 @@ import {
 } from "react";
 import { DEFAULT_ANIMATION_EASING } from "./animation";
 import { ChartProvider, type LineConfig, type Margin } from "./chart-context";
+import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 import { useChartInteraction } from "./use-chart-interaction";
-
-function isDefsComponent(child: ReactElement): boolean {
-  const displayName =
-    (child.type as { displayName?: string })?.displayName ||
-    (child.type as { name?: string })?.name ||
-    "";
-  return (
-    displayName.includes("Gradient") ||
-    displayName.includes("Pattern") ||
-    displayName === "LinearGradient" ||
-    displayName === "RadialGradient"
-  );
-}
 
 /** Markers render after the interaction overlay so they stay clickable. */
 export function isPostOverlayComponent(child: ReactElement): boolean {
@@ -219,8 +207,11 @@ export function TimeSeriesChartInner({
       return;
     }
 
-    if (isDefsComponent(child)) {
+    if (isGradientDefComponent(child)) {
       defsChildren.push(child);
+    } else if (isPatternDefComponent(child)) {
+      // Keep pattern defs in the plot <g> (same as main) — hoisting breaks url(#id) fills.
+      preOverlayChildren.push(child);
     } else if (isPostOverlayComponent(child)) {
       postOverlayChildren.push(child);
     } else {
@@ -263,7 +254,7 @@ export function TimeSeriesChartInner({
   return (
     <ChartProvider value={contextValue}>
       <svg aria-hidden="true" height={height} width={width}>
-        <defs>{defsChildren}</defs>
+        {defsChildren.length > 0 && <defs>{defsChildren}</defs>}
 
         <rect fill="transparent" height={height} width={width} x={0} y={0} />
 

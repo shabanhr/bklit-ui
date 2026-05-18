@@ -46,6 +46,7 @@ export function MotionControl({
   onChange,
   onPreview,
   onCommit,
+  onMotionCurveDragActiveChange,
 }: {
   state: StudioUrlState;
   /** Stagger multiplier for charts with sequenced enter (gauge, radar, funnel). */
@@ -62,6 +63,7 @@ export function MotionControl({
     key: K,
     value: StudioUrlState[K]
   ) => void;
+  onMotionCurveDragActiveChange?: (dragging: boolean) => void;
 }) {
   const syncDuration = (seconds: number, commit: boolean) => {
     const ms = motionDurationToAnimationMs(seconds);
@@ -86,6 +88,7 @@ export function MotionControl({
 
       <MotionCurveEditor
         onCommit={onCommit}
+        onDragActiveChange={onMotionCurveDragActiveChange}
         onPreview={onPreview}
         state={motionSlice}
       />
