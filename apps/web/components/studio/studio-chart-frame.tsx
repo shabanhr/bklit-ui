@@ -1,8 +1,15 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import type { CSSProperties } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   StudioFrameRulerX,
   StudioFrameRulerY,
@@ -97,25 +104,37 @@ function ResizeHandle({
   );
 }
 
-export function StudioChartFrame({
-  width,
-  height,
-  onResize,
-  onDraggingChange,
-  className,
-  style,
-  children,
-}: {
-  width: number;
-  height: number;
-  onResize: (width: number, height: number) => void;
-  onDraggingChange?: (dragging: boolean) => void;
-  className?: string;
-  style?: CSSProperties;
-  children: React.ReactNode;
-}) {
+export const StudioChartFrame = forwardRef<
+  HTMLDivElement,
+  {
+    width: number;
+    height: number;
+    onResize: (width: number, height: number) => void;
+    onDraggingChange?: (dragging: boolean) => void;
+    /** Container used to cap resize (defaults to parent element). */
+    boundsRef?: React.RefObject<HTMLElement | null>;
+    className?: string;
+    style?: CSSProperties;
+    isRecording?: boolean;
+    children: React.ReactNode;
+  }
+>(function StudioChartFrame(
+  {
+    width,
+    height,
+    onResize,
+    onDraggingChange,
+    boundsRef,
+    className,
+    style,
+    isRecording = false,
+    children,
+  },
+  ref
+) {
   const reducedMotion = useReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const captureRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [maxSize, setMaxSize] = useState({
@@ -131,22 +150,24 @@ export function StudioChartFrame({
     )
   );
 
+  useImperativeHandle(ref, () => captureRef.current as HTMLDivElement);
+
   useEffect(() => {
-    const parent = wrapRef.current?.parentElement;
-    if (!parent) {
+    const bounds = boundsRef?.current ?? wrapRef.current?.parentElement;
+    if (!bounds) {
       return;
     }
     const update = () => {
       setMaxSize({
-        width: Math.max(parent.clientWidth, STUDIO_CHART_FRAME_WIDTH),
-        height: Math.max(parent.clientHeight, STUDIO_CHART_FRAME_HEIGHT),
+        width: Math.max(bounds.clientWidth, STUDIO_CHART_FRAME_WIDTH),
+        height: Math.max(bounds.clientHeight, STUDIO_CHART_FRAME_HEIGHT),
       });
     };
     update();
     const observer = new ResizeObserver(update);
-    observer.observe(parent);
+    observer.observe(bounds);
     return () => observer.disconnect();
-  }, []);
+  }, [boundsRef]);
 
   useEffect(() => {
     if (draggingRef.current) {
@@ -157,6 +178,9 @@ export function StudioChartFrame({
 
   const startDrag = useCallback(
     (edge: ResizeEdge) => (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (isRecording) {
+        return;
+      }
       event.preventDefault();
       const handle = event.currentTarget;
       handle.setPointerCapture(event.pointerId);
@@ -215,6 +239,7 @@ export function StudioChartFrame({
       handle.addEventListener("pointerup", onPointerUp);
     },
     [
+      isRecording,
       maxSize.height,
       maxSize.width,
       onDraggingChange,
@@ -224,40 +249,55 @@ export function StudioChartFrame({
     ]
   );
 
+  const frameContent = (
+    <div className="flex size-full min-h-0 min-w-0 items-center justify-center p-4">
+      {children}
+    </div>
+  );
+
   return (
-    <div
+    <motion.div
       className={cn(
         "group/studio-frame relative inline-block max-w-full overflow-visible",
         className
       )}
       ref={wrapRef}
     >
-      <motion.div
-        animate={{ width: size.width, height: size.height }}
-        className={cn(
-          "relative overflow-hidden rounded-lg border-2 bg-card shadow-sm transition-[border-color,border-style]",
-          isDragging
-            ? "border-foreground/50 border-dotted"
-            : "border-border hover:border-foreground/35"
-        )}
-        layout
-        style={style}
-        transition={
-          isDragging || reducedMotion
-            ? { duration: 0 }
-            : { ...frameSpring, layout: frameSpring }
-        }
-      >
+      {isRecording ? (
         <motion.div
-          className="flex size-full min-h-0 min-w-0 items-center justify-center p-4"
+          animate={{ width: size.width, height: size.height }}
+          className="relative overflow-hidden bg-card"
           layout
+          ref={captureRef}
+          style={style}
+          transition={{ duration: 0 }}
         >
-          {children}
+          {frameContent}
         </motion.div>
-        <ResizeHandle edge="right" onPointerDown={startDrag("right")} />
-        <ResizeHandle edge="bottom" onPointerDown={startDrag("bottom")} />
-        <ResizeHandle edge="corner" onPointerDown={startDrag("corner")} />
-      </motion.div>
+      ) : (
+        <motion.div
+          animate={{ width: size.width, height: size.height }}
+          className={cn(
+            "relative overflow-hidden rounded-lg border-2 bg-card shadow-sm transition-[border-color,border-style]",
+            isDragging
+              ? "border-foreground/50 border-dotted"
+              : "border-border hover:border-foreground/35"
+          )}
+          layout
+          ref={captureRef}
+          style={style}
+          transition={
+            isDragging || reducedMotion
+              ? { duration: 0 }
+              : { ...frameSpring, layout: frameSpring }
+          }
+        >
+          {frameContent}
+          <ResizeHandle edge="right" onPointerDown={startDrag("right")} />
+          <ResizeHandle edge="bottom" onPointerDown={startDrag("bottom")} />
+          <ResizeHandle edge="corner" onPointerDown={startDrag("corner")} />
+        </motion.div>
+      )}
       <AnimatePresence initial={false}>
         {isDragging ? (
           <>
@@ -274,6 +314,6 @@ export function StudioChartFrame({
           </>
         ) : null}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
-}
+});

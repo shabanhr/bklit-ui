@@ -256,6 +256,16 @@
     border-radius: var(--radius-lg);
   }
 
+  .studio-recording-capture {
+    background-color: var(--card);
+    background-image: radial-gradient(
+      circle,
+      color-mix(in oklch, var(--foreground) 14%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 20px 20px;
+  }
+
   /* Motion bezier handles stay inside the sidebar (no overflow: visible on section) */
   .studio-motion-section {
     max-width: 100%;
