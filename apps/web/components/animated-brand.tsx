@@ -8,7 +8,7 @@ interface AnimatedBrandProps {
   className?: string;
 }
 
-function delay(ms: number, signal: { cancelled: boolean }) {
+function delay(ms: number, signal: { cancelled: boolean; timeouts: number[] }) {
   return new Promise<void>((resolve) => {
     const id = window.setTimeout(() => {
       if (!signal.cancelled) {
