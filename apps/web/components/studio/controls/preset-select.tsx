@@ -37,9 +37,11 @@ export function PresetSwatch({
 export function PresetSelect({
   value,
   onChange,
+  disabled = false,
 }: {
   value: ColorPresetId;
   onChange: (id: ColorPresetId) => void;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const active = COLOR_PRESETS.find((p) => p.id === value);
@@ -51,6 +53,7 @@ export function PresetSelect({
           aria-expanded={open}
           aria-label="Color preset"
           className="h-10 gap-2 px-3 text-sm"
+          disabled={disabled}
           type="button"
           variant="outline"
         >

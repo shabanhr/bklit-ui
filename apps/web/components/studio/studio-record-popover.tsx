@@ -1,0 +1,148 @@
+"use client";
+
+import { VideoCameraIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  STUDIO_RECORDING_ASPECT_OPTIONS,
+  STUDIO_RECORDING_INTERACTION_OPTIONS,
+  type StudioRecordingAspect,
+  type StudioRecordingInteractionMs,
+} from "@/lib/studio/studio-recording";
+import { cn } from "@/lib/utils";
+
+export function StudioRecordPopover({
+  disabled,
+  isRecording,
+  onStart,
+  onStop,
+}: {
+  disabled?: boolean;
+  isRecording: boolean;
+  onStart: (
+    interactionMs: StudioRecordingInteractionMs,
+    aspect: StudioRecordingAspect
+  ) => void;
+  onStop: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [interactionMs, setInteractionMs] =
+    useState<StudioRecordingInteractionMs>(5000);
+  const [aspect, setAspect] = useState<StudioRecordingAspect>("16:9");
+
+  if (isRecording) {
+    return (
+      <Button
+        aria-label="Stop recording"
+        className="size-10"
+        onClick={onStop}
+        size="icon"
+        title="Stop recording"
+        type="button"
+        variant="outline"
+      >
+        <span className="size-2.5 rounded-sm bg-destructive" />
+      </Button>
+    );
+  }
+
+  return (
+    <Popover onOpenChange={setOpen} open={open}>
+      <PopoverTrigger asChild>
+        <Button
+          aria-expanded={open}
+          aria-label="Record animation"
+          className="size-10"
+          disabled={disabled}
+          size="icon"
+          title={disabled ? "Recording requires motion" : "Record animation"}
+          type="button"
+          variant="outline"
+        >
+          <VideoCameraIcon aria-hidden className="size-5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        className="w-72 p-4"
+        side="bottom"
+        sideOffset={8}
+      >
+        <p className="font-medium text-sm">Record chart</p>
+        <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
+          Resize to your chosen aspect, capture the enter animation, then
+          interact live. Best in Chrome.
+        </p>
+
+        <div className="mt-4">
+          <p className="mb-2 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
+            Aspect ratio
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STUDIO_RECORDING_ASPECT_OPTIONS.map((opt) => {
+              const selected = aspect === opt.value;
+              return (
+                <button
+                  className={cn(
+                    "rounded-md border px-2 py-2 text-left text-xs transition-colors",
+                    selected
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  )}
+                  key={opt.value}
+                  onClick={() => setAspect(opt.value)}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="mb-2 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
+            Interaction time
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {STUDIO_RECORDING_INTERACTION_OPTIONS.map((opt) => {
+              const selected = interactionMs === opt.value;
+              return (
+                <button
+                  className={cn(
+                    "rounded-md border px-2 py-2 text-left text-xs transition-colors",
+                    selected
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  )}
+                  key={opt.value}
+                  onClick={() => setInteractionMs(opt.value)}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button
+          className="mt-4 w-full"
+          onClick={() => {
+            setOpen(false);
+            onStart(interactionMs, aspect);
+          }}
+          type="button"
+        >
+          <VideoCameraIcon aria-hidden className="mr-2 size-4" />
+          Start recording
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+}

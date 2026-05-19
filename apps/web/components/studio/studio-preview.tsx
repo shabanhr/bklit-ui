@@ -2,18 +2,30 @@
 
 import { Refresh01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useMemo, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { PresetSelect } from "@/components/studio/controls/preset-select";
 import { StudioChartFrame } from "@/components/studio/studio-chart-frame";
 import { StudioChartViewport } from "@/components/studio/studio-chart-viewport";
 import { StudioCodeSheet } from "@/components/studio/studio-code-sheet";
 import { StudioPanel } from "@/components/studio/studio-panel";
+import { StudioRecordPopover } from "@/components/studio/studio-record-popover";
+import { StudioRecordingMask } from "@/components/studio/studio-recording-mask";
+import { StudioRecordingTimeline } from "@/components/studio/studio-recording-timeline";
 import { useStudioMotionRemountKey } from "@/components/studio/use-studio-motion-remount";
+import { useStudioRecording } from "@/components/studio/use-studio-recording";
 import { useStudioState } from "@/components/studio/use-studio-state";
 import { Button } from "@/components/ui/button";
 import { presetStyle } from "@/lib/studio/color-presets";
 import { StudioPatternDefs, studioPatternFill } from "@/lib/studio/patterns";
 import type { StudioRenderContext } from "@/lib/studio/render-context";
+import {
+  getRecordingCaptureDimensions,
+  STUDIO_RECORDING_CAPTURE_INSET_PX,
+  type StudioRecordingAspect,
+  type StudioRecordingInteractionMs,
+} from "@/lib/studio/studio-recording";
+import { cn } from "@/lib/utils";
 
 export function StudioPreview() {
   const {
@@ -26,6 +38,27 @@ export function StudioPreview() {
   } = useStudioState();
   const [animationKey, setAnimationKey] = useState(0);
   const motionRemountKey = useStudioMotionRemountKey(displayState);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const chartAreaRef = useRef<HTMLDivElement>(null);
+  const recordCaptureRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const frameSizeBeforeRecording = useRef<{ w: number; h: number } | null>(
+    null
+  );
+  const reducedMotion = useReducedMotion();
+  const {
+    phase,
+    isRecording,
+    elapsedMs,
+    timeline,
+    error,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    isPaused,
+    clearError,
+  } = useStudioRecording();
 
   const replay = useCallback(() => {
     setAnimationKey((k) => k + 1);
@@ -47,12 +80,74 @@ export function StudioPreview() {
     [setFrameSize]
   );
 
+  const handleStartRecording = useCallback(
+    async (
+      interactionMs: StudioRecordingInteractionMs,
+      aspect: StudioRecordingAspect
+    ) => {
+      const element = recordCaptureRef.current;
+      if (!element) {
+        return;
+      }
+
+      const saved = { w: state.frameW, h: state.frameH };
+      const dimensions = getRecordingCaptureDimensions(
+        state.frameW,
+        state.frameH,
+        aspect
+      );
+
+      if (aspect === "16:9") {
+        frameSizeBeforeRecording.current = saved;
+        setFrameSize(dimensions.frameWidth, dimensions.frameHeight);
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve());
+          });
+        });
+      } else {
+        frameSizeBeforeRecording.current = null;
+      }
+
+      await startRecording({
+        element,
+        width: dimensions.captureWidth,
+        height: dimensions.captureHeight,
+        state: displayState,
+        chart: state.chart,
+        replay,
+        interactionMs,
+        onFinished: () => {
+          const previous = frameSizeBeforeRecording.current;
+          if (previous) {
+            setFrameSize(previous.w, previous.h);
+            frameSizeBeforeRecording.current = null;
+          }
+        },
+      });
+    },
+    [
+      displayState,
+      replay,
+      setFrameSize,
+      startRecording,
+      state.chart,
+      state.frameH,
+      state.frameW,
+    ]
+  );
+
+  const recordingBlocked = reducedMotion === true;
+  const controlsDisabled = isRecording;
+  const showRecordingChrome = isRecording && timeline;
+
   return (
     <StudioPanel className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-      <div className="absolute top-6 right-6 z-10 flex items-center gap-2.5">
+      <div className="absolute top-6 right-6 z-30 flex items-center gap-2.5">
         <Button
           aria-label="Replay animation"
           className="size-10"
+          disabled={controlsDisabled}
           onClick={replay}
           size="icon"
           title="Replay animation"
@@ -61,37 +156,137 @@ export function StudioPreview() {
         >
           <HugeiconsIcon icon={Refresh01Icon} size={20} strokeWidth={1.5} />
         </Button>
+        <StudioRecordPopover
+          disabled={recordingBlocked}
+          isRecording={isRecording}
+          onStart={handleStartRecording}
+          onStop={stopRecording}
+        />
         <PresetSelect
+          disabled={controlsDisabled}
           onChange={(v) => setParam("preset", v)}
           value={displayState.preset}
         />
         <StudioCodeSheet state={state} />
       </div>
 
-      <div className="studio-preview-canvas flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto p-6 pt-16">
-        <StudioChartFrame
-          height={state.frameH}
-          onResize={handleFrameResize}
-          style={presetStyle(displayState.preset)}
-          width={state.frameW}
+      {error ? (
+        <div
+          className="absolute top-20 right-6 z-20 max-w-xs rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-destructive text-sm"
+          role="alert"
         >
-          <div className="flex size-full min-h-0 items-center justify-center">
-            <StudioChartViewport>
-              {(frame) => {
-                const renderCtx: StudioRenderContext = {
-                  animationKey,
-                  motionRemountKey,
-                  committedState: state,
-                  motionCurveDragging,
-                  patternDefs,
-                  patternFill,
-                  frame,
-                };
-                return config.render(displayState, renderCtx);
-              }}
-            </StudioChartViewport>
+          <p>{error}</p>
+          <button className="mt-1 underline" onClick={clearError} type="button">
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          "studio-preview-canvas relative flex min-h-0 flex-1 flex-col overflow-auto p-6 pt-16",
+          isRecording ? "gap-4" : "items-center justify-center gap-5"
+        )}
+        ref={canvasRef}
+      >
+        {isRecording ? (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-1 bg-zinc-950/88"
+          />
+        ) : null}
+
+        <div
+          className={cn(
+            "relative z-2 flex min-h-0 w-full flex-1 flex-col",
+            isRecording
+              ? "gap-4"
+              : "max-w-3xl items-center justify-center gap-5"
+          )}
+        >
+          <div
+            className="relative flex min-h-0 w-full flex-1 items-center justify-center"
+            ref={chartAreaRef}
+          >
+            <StudioRecordingMask
+              active={isRecording}
+              containerRef={chartAreaRef}
+              targetRef={recordCaptureRef}
+            />
+
+            <div
+              className={cn(
+                isRecording
+                  ? "studio-recording-capture relative shrink-0"
+                  : "inline-flex"
+              )}
+              ref={recordCaptureRef}
+              style={
+                isRecording
+                  ? {
+                      width:
+                        state.frameW + STUDIO_RECORDING_CAPTURE_INSET_PX * 2,
+                      height:
+                        state.frameH + STUDIO_RECORDING_CAPTURE_INSET_PX * 2,
+                    }
+                  : undefined
+              }
+            >
+              <div
+                className={cn(
+                  isRecording && "absolute",
+                  !isRecording && "contents"
+                )}
+                style={
+                  isRecording
+                    ? {
+                        top: STUDIO_RECORDING_CAPTURE_INSET_PX,
+                        left: STUDIO_RECORDING_CAPTURE_INSET_PX,
+                      }
+                    : undefined
+                }
+              >
+                <StudioChartFrame
+                  boundsRef={chartAreaRef}
+                  height={state.frameH}
+                  isRecording={isRecording}
+                  onResize={handleFrameResize}
+                  ref={frameRef}
+                  style={presetStyle(displayState.preset)}
+                  width={state.frameW}
+                >
+                  <div className="flex size-full min-h-0 items-center justify-center">
+                    <StudioChartViewport>
+                      {(frame) => {
+                        const renderCtx: StudioRenderContext = {
+                          animationKey,
+                          motionRemountKey,
+                          committedState: state,
+                          motionCurveDragging,
+                          patternDefs,
+                          patternFill,
+                          frame,
+                        };
+                        return config.render(displayState, renderCtx);
+                      }}
+                    </StudioChartViewport>
+                  </div>
+                </StudioChartFrame>
+              </div>
+            </div>
           </div>
-        </StudioChartFrame>
+
+          {showRecordingChrome ? (
+            <StudioRecordingTimeline
+              elapsedMs={elapsedMs}
+              isPaused={isPaused}
+              onPause={pauseRecording}
+              onResume={resumeRecording}
+              phase={phase === "encoding" ? "encoding" : "capturing"}
+              timeline={timeline}
+            />
+          ) : null}
+        </div>
       </div>
     </StudioPanel>
   );

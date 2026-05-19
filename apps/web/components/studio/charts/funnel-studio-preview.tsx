@@ -22,7 +22,6 @@ export function FunnelStudioPreview({
     state.funnelOrientation === "horizontal" ? 2.2 : 1 / 1.8;
   const { width, height } = studioFitAspectSize(ctx.frame, widthOverHeight);
   const motionEnter = getStudioMotionEnterProps(state);
-
   return (
     <div className="shrink-0" style={{ width, height }}>
       <FunnelChart
