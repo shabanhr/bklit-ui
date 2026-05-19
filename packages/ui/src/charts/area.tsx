@@ -8,15 +8,9 @@ import { AreaClosed, LinePath } from "@visx/shape";
 type CurveFactory = any;
 
 import { motion, useMotionTemplate, useSpring } from "motion/react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useId, useMemo, useRef } from "react";
 import { chartCssVars, useChart } from "./chart-context";
+import { ChartRevealClip } from "./chart-reveal-clip";
 
 export interface AreaProps {
   /** Key in data to use for y values */
@@ -65,12 +59,12 @@ export function Area({
     tooltipData,
     selection,
     isLoaded,
-    animationDuration,
+    enterTransition,
+    revealEpoch,
     xAccessor,
   } = useChart();
 
   const pathRef = useRef<SVGPathElement>(null);
-  const [clipWidth, setClipWidth] = useState(0);
 
   // Unique IDs for this area
   const uniqueId = useId();
@@ -85,9 +79,16 @@ export function Area({
   );
   const edgeMaskId = `area-edge-mask-${dataKey}-${uniqueId}`;
   const edgeGradientId = `${edgeMaskId}-gradient`;
+  const revealClipId = `grow-clip-area-${dataKey}-${uniqueId}`;
+  const useRevealClip = animate && data.length > 1 && innerWidth > 0;
 
-  // Resolved stroke color (defaults to fill)
-  const resolvedStroke = stroke || fill;
+  const isPatternFill = fill.startsWith("url(");
+  const showAreaFill = isPatternFill || fillOpacity > 0;
+  const areaFill = isPatternFill ? fill : `url(#${gradientId})`;
+
+  // Resolved stroke color (defaults to fill; pattern URLs need a real color)
+  const resolvedStroke =
+    stroke || (isPatternFill ? chartCssVars.linePrimary : fill);
 
   const getY = useCallback(
     (d: Record<string, unknown>) => {
@@ -211,37 +212,25 @@ export function Area({
   // Create animated strokeDasharray using motion template
   const animatedDasharray = useMotionTemplate`${segmentLengthSpring} ${chordMetrics.total}`;
 
-  useEffect(() => {
-    if (!(animate && data.length > 1)) {
-      return;
-    }
-    if (!isLoaded) {
-      requestAnimationFrame(() => {
-        setClipWidth(innerWidth);
-      });
-    }
-  }, [animate, innerWidth, isLoaded, data.length]);
-
   const isHovering = tooltipData !== null || selection?.active === true;
-  const easing = "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
     <>
-      {/* Gradient definitions */}
+      {/* Gradient definitions (pattern fills use fill directly) */}
       <defs>
-        {/* Fill gradient - fades from fillOpacity at top to gradientToOpacity at bottom */}
-        <linearGradient id={gradientId} x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop
-            offset="0%"
-            style={{ stopColor: fill, stopOpacity: fillOpacity }}
-          />
-          <stop
-            offset="100%"
-            style={{ stopColor: fill, stopOpacity: gradientToOpacity }}
-          />
-        </linearGradient>
+        {!isPatternFill && (
+          <linearGradient id={gradientId} x1="0%" x2="0%" y1="0%" y2="100%">
+            <stop
+              offset="0%"
+              style={{ stopColor: fill, stopOpacity: fillOpacity }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: fill, stopOpacity: gradientToOpacity }}
+            />
+          </linearGradient>
+        )}
 
-        {/* Stroke gradient - fades at edges */}
         <linearGradient id={strokeGradientId} x1="0%" x2="100%" y1="0%" y2="0%">
           <stop
             offset="0%"
@@ -261,8 +250,7 @@ export function Area({
           />
         </linearGradient>
 
-        {/* Edge fade mask for area fill */}
-        {fadeEdges && (
+        {fadeEdges && !isPatternFill && (
           <>
             <linearGradient
               id={edgeGradientId}
@@ -302,43 +290,42 @@ export function Area({
       </defs>
 
       {/* Clip path for grow animation - unique per area */}
-      {animate && (
+      {useRevealClip ? (
         <defs>
-          <clipPath id={`grow-clip-area-${dataKey}`}>
-            <rect
-              height={innerHeight + 20}
-              style={{
-                transition:
-                  !isLoaded && clipWidth > 0
-                    ? `width ${animationDuration}ms ${easing}`
-                    : "none",
-              }}
-              width={isLoaded ? innerWidth : clipWidth}
-              x={0}
-              y={0}
-            />
-          </clipPath>
+          <ChartRevealClip
+            clipPathId={revealClipId}
+            enterTransition={enterTransition}
+            height={innerHeight + 20}
+            revealEpoch={revealEpoch ?? 0}
+            targetWidth={innerWidth}
+          />
         </defs>
-      )}
+      ) : null}
 
       {/* Main area with clip path */}
-      <g clipPath={animate ? `url(#grow-clip-area-${dataKey})` : undefined}>
+      <g clipPath={useRevealClip ? `url(#${revealClipId})` : undefined}>
         <motion.g
           animate={{ opacity: isHovering && showHighlight ? 0.6 : 1 }}
           initial={{ opacity: 1 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
         >
           {/* Area fill */}
-          <g mask={fadeEdges ? `url(#${edgeMaskId})` : undefined}>
-            <AreaClosed
-              curve={curve}
-              data={data}
-              fill={`url(#${gradientId})`}
-              x={(d) => xScale(xAccessor(d)) ?? 0}
-              y={getY}
-              yScale={yScale}
-            />
-          </g>
+          {showAreaFill ? (
+            <g
+              mask={
+                fadeEdges && !isPatternFill ? `url(#${edgeMaskId})` : undefined
+              }
+            >
+              <AreaClosed
+                curve={curve}
+                data={data}
+                fill={areaFill}
+                x={(d) => xScale(xAccessor(d)) ?? 0}
+                y={getY}
+                yScale={yScale}
+              />
+            </g>
+          ) : null}
 
           {/* Stroke line on top of area */}
           {showLine && (

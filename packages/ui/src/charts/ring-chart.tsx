@@ -2,11 +2,13 @@
 
 import { Group } from "@visx/group";
 import { ParentSize } from "@visx/responsive";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
   type ReactNode,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -42,6 +44,10 @@ export interface RingChartProps {
   startAngle?: number;
   /** End angle in radians. Default: 3*PI/2 (full circle) */
   endAngle?: number;
+  /** Framer Motion transition for ring enter animation */
+  enterTransition?: Transition;
+  /** Scales ring stagger delays (1 = default). */
+  enterStaggerScale?: number;
   /** Child components (Ring, RingCenter, etc.) */
   children: ReactNode;
 }
@@ -59,6 +65,8 @@ interface RingChartInnerProps {
   onHoverChange?: (index: number | null) => void;
   startAngle: number;
   endAngle: number;
+  enterTransition?: Transition;
+  enterStaggerScale: number;
 }
 
 // Helper to check if a child is a RingCenter component
@@ -84,6 +92,8 @@ function RingChartInner({
   onHoverChange,
   startAngle,
   endAngle,
+  enterTransition,
+  enterStaggerScale,
 }: RingChartInnerProps) {
   const [internalHoveredIndex, setInternalHoveredIndex] = useState<
     number | null
@@ -157,13 +167,14 @@ function RingChartInner({
     [baseInnerRadius, strokeWidth, ringGap]
   );
 
-  // Mark as loaded after initial render
-  useState(() => {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: enterTransition
+  useEffect(() => {
+    setIsLoaded(false);
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 100);
     return () => clearTimeout(timer);
-  });
+  }, [enterTransition, enterStaggerScale]);
 
   // Separate SVG children (rings) from HTML children (RingCenter)
   // This avoids Safari's foreignObject positioning bugs (WebKit #23113)
@@ -198,6 +209,8 @@ function RingChartInner({
     setHoveredIndex,
     animationKey,
     isLoaded,
+    enterTransition,
+    enterStaggerScale,
     containerRef,
     totalValue,
     getColor,
@@ -257,6 +270,8 @@ export function RingChart({
   onHoverChange,
   startAngle = -Math.PI / 2,
   endAngle = (3 * Math.PI) / 2,
+  enterTransition,
+  enterStaggerScale = 1,
   children,
 }: RingChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -274,6 +289,8 @@ export function RingChart({
           containerRef={containerRef}
           data={data}
           endAngle={endAngle}
+          enterStaggerScale={enterStaggerScale}
+          enterTransition={enterTransition}
           height={fixedSize}
           hoveredIndexProp={hoveredIndex}
           onHoverChange={onHoverChange}
@@ -301,6 +318,8 @@ export function RingChart({
             containerRef={containerRef}
             data={data}
             endAngle={endAngle}
+            enterStaggerScale={enterStaggerScale}
+            enterTransition={enterTransition}
             height={height}
             hoveredIndexProp={hoveredIndex}
             onHoverChange={onHoverChange}

@@ -1,6 +1,7 @@
 "use client";
 
 import { ParentSize } from "@visx/responsive";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -11,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Area, type AreaProps } from "./area";
 import type { LineConfig, Margin } from "./chart-context";
+import { PatternArea } from "./pattern-area";
 import { TimeSeriesChartInner } from "./time-series-chart-shell";
 
 export interface AreaChartProps {
@@ -22,6 +24,12 @@ export interface AreaChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 1100 */
   animationDuration?: number;
+  /** CSS easing for clip-reveal. Default: cubic-bezier(0.85, 0, 0.15, 1) */
+  animationEasing?: string;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers reveal replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -50,10 +58,15 @@ function extractAreaConfigs(children: ReactNode): LineConfig[] {
         : "";
 
     const props = child.props as AreaProps | undefined;
+    const isPatternArea =
+      componentName === "PatternArea" || child.type === PatternArea;
     const isAreaComponent =
       componentName === "Area" ||
       child.type === Area ||
-      (props && typeof props.dataKey === "string" && props.dataKey.length > 0);
+      (props &&
+        typeof props.dataKey === "string" &&
+        props.dataKey.length > 0 &&
+        !isPatternArea);
 
     if (isAreaComponent && props?.dataKey) {
       configs.push({
@@ -74,6 +87,9 @@ interface ChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -85,6 +101,9 @@ function ChartInner({
   xDataKey,
   margin,
   animationDuration,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   children,
   containerRef,
 }: ChartInnerProps) {
@@ -93,12 +112,15 @@ function ChartInner({
   return (
     <TimeSeriesChartInner
       animationDuration={animationDuration}
+      animationEasing={animationEasing}
       clipPathId="chart-area-grow-clip"
       containerRef={containerRef}
       data={data}
+      enterTransition={enterTransition}
       height={height}
       lines={lines}
       margin={margin}
+      revealSignature={revealSignature}
       width={width}
       xDataKey={xDataKey}
     >
@@ -112,6 +134,9 @@ export function AreaChart({
   xDataKey = "date",
   margin: marginProp,
   animationDuration = 1100,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   children,
@@ -129,10 +154,13 @@ export function AreaChart({
         {({ width, height }) => (
           <ChartInner
             animationDuration={animationDuration}
+            animationEasing={animationEasing}
             containerRef={containerRef}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
+            revealSignature={revealSignature}
             width={width}
             xDataKey={xDataKey}
           >

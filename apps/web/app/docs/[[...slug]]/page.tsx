@@ -52,8 +52,8 @@ export default async function Page(props: {
   }
 
   return (
-    <div className="flex">
-      <article className="mx-auto min-w-0 max-w-3xl flex-1 px-6 py-8 pb-16">
+    <div className="flex w-full justify-center">
+      <article className="w-full max-w-[790px] px-10 pt-24 pb-16">
         <header className="mb-8">
           <div className="flex items-start justify-between gap-4">
             <div>

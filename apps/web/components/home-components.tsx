@@ -220,7 +220,7 @@ export function HomeComponents() {
       <ShowcaseCard className="col-span-full min-h-[200px] sm:col-span-6">
         <BarChart barGap={0.1} data={barData60Days} xDataKey="day">
           <Grid horizontal />
-          <Bar dataKey="value" lineCap="butt" />
+          <Bar dataKey="value" fill="var(--chart-1)" lineCap="butt" />
           <BarXAxis maxLabels={6} />
           <ChartTooltip />
         </BarChart>
@@ -229,9 +229,9 @@ export function HomeComponents() {
       <ShowcaseCard className="col-span-full min-h-[200px] sm:col-span-6">
         <BarChart data={barDataMultiSeries} xDataKey="month">
           <Grid horizontal />
-          <Bar dataKey="revenue" fill="hsl(0, 0%, 65%)" lineCap="round" />
-          <Bar dataKey="expenses" fill="hsl(0, 0%, 50%)" lineCap="round" />
-          <Bar dataKey="profit" fill="hsl(0, 0%, 35%)" lineCap="round" />
+          <Bar dataKey="revenue" fill="var(--chart-1)" lineCap="round" />
+          <Bar dataKey="expenses" fill="var(--chart-2)" lineCap="round" />
+          <Bar dataKey="profit" fill="var(--chart-3)" lineCap="round" />
           <BarXAxis />
           <ChartTooltip />
         </BarChart>

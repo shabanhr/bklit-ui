@@ -39,6 +39,7 @@ import {
   LiveYAxis,
   type MomentumColors,
   type OHLCDataPoint,
+  PatternArea,
   PatternLines,
   PieCenter,
   PieChart,
@@ -75,9 +76,7 @@ import {
   curveNatural,
   curveStep,
 } from "@visx/curve";
-import { AreaClosed } from "@visx/shape";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import { CheckIcon, CopyIcon } from "lucide-react";
 import { motion, useSpring } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -89,6 +88,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { CopyButton } from "@/components/copy-button";
 import { useWorldDataStandalone } from "@/components/docs/use-world-data";
 import {
   Card,
@@ -539,43 +539,6 @@ interface ChartExampleCardProps {
   children: ReactNode;
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [text]);
-
-  return (
-    <button
-      className="shrink-0 rounded-md border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      onClick={copy}
-      type="button"
-    >
-      <span className="relative block size-3">
-        <CopyIcon
-          className="absolute inset-0 size-3 transition-all duration-300 ease-out"
-          style={{
-            opacity: copied ? 0 : 1,
-            filter: copied ? "blur(4px)" : "blur(0px)",
-            transform: copied ? "scale(0.8)" : "scale(1)",
-          }}
-        />
-        <CheckIcon
-          className="absolute inset-0 size-3 transition-all duration-300 ease-out"
-          style={{
-            opacity: copied ? 1 : 0,
-            filter: copied ? "blur(0px)" : "blur(4px)",
-            transform: copied ? "scale(1)" : "scale(0.8)",
-          }}
-        />
-      </span>
-    </button>
-  );
-}
-
 function ChartExampleCard({
   title,
   description,
@@ -600,12 +563,12 @@ function ChartExampleCard({
               <SheetTrigger className="shrink-0 rounded-md border px-2.5 py-1 font-medium text-muted-foreground text-xs transition-colors hover:bg-muted hover:text-foreground">
                 View Code
               </SheetTrigger>
-              <SheetContent className="overflow-y-auto sm:max-w-2xl">
+              <SheetContent className="overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>{title}</SheetTitle>
                   <SheetDescription>{description}</SheetDescription>
                 </SheetHeader>
-                <div className="mt-4 space-y-4">
+                <div className="space-y-4 px-6 pb-6">
                   <div className="overflow-hidden rounded-lg border [&_figure]:my-0! [&_pre]:my-0!">
                     <DynamicCodeBlock
                       code={code}
@@ -638,36 +601,6 @@ function ChartExampleCard({
         <p className="text-muted-foreground text-xs">{footer}</p>
       </CardFooter>
     </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Pattern area helper (renders AreaClosed with a pattern fill via useChart)
-// ---------------------------------------------------------------------------
-
-function PatternArea({
-  dataKey,
-  fill,
-  curve = curveMonotoneX,
-}: {
-  dataKey: string;
-  fill: string;
-  curve?: typeof curveMonotoneX;
-}) {
-  const { data, xScale, yScale, xAccessor } = useChart();
-
-  return (
-    <AreaClosed
-      curve={curve}
-      data={data}
-      fill={fill}
-      x={(d) => xScale(xAccessor(d)) ?? 0}
-      y={(d) => {
-        const v = d[dataKey];
-        return typeof v === "number" ? (yScale(v) ?? 0) : 0;
-      }}
-      yScale={yScale}
-    />
   );
 }
 
@@ -982,6 +915,7 @@ function makeAreaExamples(): ChartExample[] {
             strokeWidth={1}
             width={6}
           />
+          <Grid horizontal />
           <PatternArea dataKey="desktop" fill="url(#area-example-pattern)" />
           <Area dataKey="desktop" fillOpacity={0} strokeWidth={2} />
           <XAxis />

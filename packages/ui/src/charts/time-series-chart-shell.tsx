@@ -2,6 +2,7 @@
 
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { bisector } from "d3-array";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -12,21 +13,10 @@ import {
   useMemo,
   useState,
 } from "react";
+import { DEFAULT_ANIMATION_EASING } from "./animation";
 import { ChartProvider, type LineConfig, type Margin } from "./chart-context";
+import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 import { useChartInteraction } from "./use-chart-interaction";
-
-function isDefsComponent(child: ReactElement): boolean {
-  const displayName =
-    (child.type as { displayName?: string })?.displayName ||
-    (child.type as { name?: string })?.name ||
-    "";
-  return (
-    displayName.includes("Gradient") ||
-    displayName.includes("Pattern") ||
-    displayName === "LinearGradient" ||
-    displayName === "RadialGradient"
-  );
-}
 
 /** Markers render after the interaction overlay so they stay clickable. */
 export function isPostOverlayComponent(child: ReactElement): boolean {
@@ -55,6 +45,10 @@ export interface TimeSeriesChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers reveal replay when it changes. */
+  revealSignature?: string;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
   /** Series keys driving y-domain and tooltip (Line / Area / SeriesBar configs). */
@@ -80,10 +74,13 @@ export function TimeSeriesChartInner({
   xDataKey,
   margin,
   animationDuration,
+  animationEasing = DEFAULT_ANIMATION_EASING,
+  enterTransition,
+  revealSignature = "",
   children,
   containerRef,
   lines,
-  clipPathId,
+  clipPathId: _clipPathId,
   composedBarDataKeys,
   composedBarSize,
   composedMaxBarSize,
@@ -94,6 +91,7 @@ export function TimeSeriesChartInner({
   yScaleDomainMax,
 }: TimeSeriesChartInnerProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [revealEpoch, setRevealEpoch] = useState(0);
 
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
@@ -166,12 +164,15 @@ export function TimeSeriesChartInner({
     [data, xAccessor]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
   useEffect(() => {
+    setRevealEpoch((n) => n + 1);
+    setIsLoaded(false);
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, animationDuration);
     return () => clearTimeout(timer);
-  }, [animationDuration]);
+  }, [animationDuration, revealSignature]);
 
   const canInteract = isLoaded;
 
@@ -206,8 +207,11 @@ export function TimeSeriesChartInner({
       return;
     }
 
-    if (isDefsComponent(child)) {
+    if (isGradientDefComponent(child)) {
       defsChildren.push(child);
+    } else if (isPatternDefComponent(child)) {
+      // Keep pattern defs in the plot <g> (same as main) — hoisting breaks url(#id) fills.
+      preOverlayChildren.push(child);
     } else if (isPostOverlayComponent(child)) {
       postOverlayChildren.push(child);
     } else {
@@ -231,6 +235,9 @@ export function TimeSeriesChartInner({
     lines,
     isLoaded,
     animationDuration,
+    animationEasing,
+    enterTransition,
+    revealEpoch,
     xAccessor,
     dateLabels,
     selection,
@@ -247,22 +254,7 @@ export function TimeSeriesChartInner({
   return (
     <ChartProvider value={contextValue}>
       <svg aria-hidden="true" height={height} width={width}>
-        <defs>
-          <clipPath id={clipPathId}>
-            <rect
-              height={innerHeight + 20}
-              style={{
-                transition: isLoaded
-                  ? "none"
-                  : `width ${animationDuration}ms cubic-bezier(0.85, 0, 0.15, 1)`,
-              }}
-              width={isLoaded ? innerWidth : 0}
-              x={0}
-              y={0}
-            />
-          </clipPath>
-          {defsChildren}
-        </defs>
+        {defsChildren.length > 0 && <defs>{defsChildren}</defs>}
 
         <rect fill="transparent" height={height} width={width} x={0} y={0} />
 

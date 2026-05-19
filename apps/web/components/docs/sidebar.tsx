@@ -4,6 +4,7 @@ import Link from "fumadocs-core/link";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { DocsScrollArea } from "@/components/docs/docs-scroll-area";
 import { cn } from "@/lib/utils";
 
 const linkStyles = {
@@ -29,9 +30,9 @@ export function Sidebar({ tree, links = [] }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed top-14 left-0 hidden h-[calc(100vh-3.5rem)] w-64 overflow-hidden bg-background pl-2 lg:block">
-      <div className="h-full overflow-y-auto py-4 pt-9">
-        <nav className="px-3">
+    <aside className="fixed top-14 left-0 hidden h-[calc(100vh-3.5rem)] w-80 overflow-hidden bg-background lg:block">
+      <DocsScrollArea className="h-full py-4 pt-9" showEdgeGradient>
+        <nav className="p-10">
           {/* Top-level navigation links */}
           {links.length > 0 && (
             <ul className="m-0 mb-4 list-none space-y-0.5 p-0">
@@ -57,7 +58,7 @@ export function Sidebar({ tree, links = [] }: SidebarProps) {
           )}
           <SidebarNodes nodes={tree.children} />
         </nav>
-      </div>
+      </DocsScrollArea>
     </aside>
   );
 }

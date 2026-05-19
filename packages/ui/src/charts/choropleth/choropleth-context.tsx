@@ -2,6 +2,7 @@
 
 import type { ProvidedZoom, TransformMatrix } from "@visx/zoom";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
+import type { Transition } from "motion/react";
 import {
   createContext,
   type Dispatch,
@@ -89,6 +90,8 @@ export interface ChoroplethContextValue {
   // Animation
   isLoaded: boolean;
   animationDuration: number;
+  enterTransition?: Transition;
+  revealEpoch: number;
 }
 
 const ChoroplethContext = createContext<ChoroplethContextValue | null>(null);

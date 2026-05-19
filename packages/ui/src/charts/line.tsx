@@ -10,6 +10,7 @@ type CurveFactory = any;
 import { motion, useMotionTemplate, useSpring } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chartCssVars, useChart } from "./chart-context";
+import { ChartRevealClip } from "./chart-reveal-clip";
 
 export interface LineProps {
   /** Key in data to use for y values */
@@ -46,13 +47,13 @@ export function Line({
     tooltipData,
     selection,
     isLoaded,
-    animationDuration,
+    enterTransition,
+    revealEpoch,
     xAccessor,
   } = useChart();
 
   const pathRef = useRef<SVGPathElement>(null);
   const [pathLength, setPathLength] = useState(0);
-  const [clipWidth, setClipWidth] = useState(0);
 
   // Unique gradient ID for this line
   const gradientId = useMemo(
@@ -60,20 +61,15 @@ export function Line({
     [dataKey]
   );
 
-  // Measure path length and trigger animation
+  // biome-ignore lint/correctness/useExhaustiveDependencies: data, innerWidth
   useEffect(() => {
     if (pathRef.current && animate) {
       const len = pathRef.current.getTotalLength();
       if (len > 0) {
         setPathLength(len);
-        if (!isLoaded) {
-          requestAnimationFrame(() => {
-            setClipWidth(innerWidth);
-          });
-        }
       }
     }
-  }, [animate, innerWidth, isLoaded]);
+  }, [animate, data, innerWidth]);
 
   // Binary search to find path length at a given X coordinate
   const findLengthAtX = useCallback(
@@ -181,7 +177,6 @@ export function Line({
   );
 
   const isHovering = tooltipData !== null || selection?.active === true;
-  const easing = "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
     <>
@@ -198,27 +193,23 @@ export function Line({
       )}
 
       {/* Clip path for grow animation - unique per line */}
-      {animate && (
+      {animate && data.length > 1 ? (
         <defs>
-          <clipPath id={`grow-clip-${dataKey}`}>
-            <rect
-              height={innerHeight + 20}
-              style={{
-                transition:
-                  !isLoaded && clipWidth > 0
-                    ? `width ${animationDuration}ms ${easing}`
-                    : "none",
-              }}
-              width={isLoaded ? innerWidth : clipWidth}
-              x={0}
-              y={0}
-            />
-          </clipPath>
+          <ChartRevealClip
+            clipPathId={`grow-clip-${dataKey}`}
+            enterTransition={enterTransition}
+            height={innerHeight + 20}
+            revealEpoch={revealEpoch ?? 0}
+            targetWidth={innerWidth}
+          />
         </defs>
-      )}
+      ) : null}
 
-      {/* Main line with clip path */}
-      <g clipPath={animate ? `url(#grow-clip-${dataKey})` : undefined}>
+      <g
+        clipPath={
+          animate && data.length > 1 ? `url(#grow-clip-${dataKey})` : undefined
+        }
+      >
         <motion.g
           animate={{ opacity: isHovering && showHighlight ? 0.3 : 1 }}
           initial={{ opacity: 1 }}

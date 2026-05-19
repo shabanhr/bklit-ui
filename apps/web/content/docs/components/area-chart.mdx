@@ -3,8 +3,9 @@ title: Area Chart
 description: A composable area chart with gradient fills, tooltips, and hover interactions
 ---
 
-import { AreaChart, Area, Grid, XAxis, ChartTooltip } from "@bklitui/ui/charts";
+import { AreaChart, Area, Grid, XAxis, ChartTooltip, PatternLines, PatternArea } from "@bklitui/ui/charts";
 import { AreaTooltipDemo } from "@/components/docs/area-tooltip-demo";
+import { AreaChartPatternDemo } from "@/components/docs/area-chart-pattern-demo";
 
 export const chartData = [
   { date: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000), revenue: 12000, costs: 8500 },
@@ -55,7 +56,7 @@ export const chartData = [
 
 ## Installation
 
-<InstallationTabs name="area-chart" dependencies={["@visx/curve", "@visx/gradient", "@visx/shape", "motion"]} />
+<InstallationTabs name="area-chart" dependencies={["@visx/curve", "@visx/gradient", "@visx/pattern", "@visx/shape", "motion"]} />
 
 ## Usage
 
@@ -192,6 +193,42 @@ Hide the top line for a softer appearance:
     fillOpacity={0.5}
     showLine={false}
   />
+  <ChartTooltip />
+</AreaChart>
+```
+
+### Pattern Fill
+
+Use `PatternLines` (or other `@visx/pattern` components) with `PatternArea` for a tiled fill. Keep an `Area` with `fillOpacity={0}` for the stroke line.
+
+<ComponentPreview>
+  <AreaChartPatternDemo />
+</ComponentPreview>
+
+```tsx
+import {
+  AreaChart,
+  Area,
+  PatternArea,
+  PatternLines,
+  Grid,
+  XAxis,
+  ChartTooltip,
+} from "@bklitui/ui/charts";
+
+<AreaChart data={chartData}>
+  <PatternLines
+    id="area-pattern"
+    height={6}
+    width={6}
+    orientation={["diagonal"]}
+    stroke="var(--chart-1)"
+    strokeWidth={1}
+  />
+  <Grid horizontal />
+  <PatternArea dataKey="desktop" fill="url(#area-pattern)" />
+  <Area dataKey="desktop" fillOpacity={0} strokeWidth={2} />
+  <XAxis />
   <ChartTooltip />
 </AreaChart>
 ```

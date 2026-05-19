@@ -2,7 +2,8 @@
 
 import type { SankeyNode as SankeyNodeType } from "d3-sankey";
 import { motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { transitionWithDelay } from "../motion-utils";
 import {
   type SankeyLinkDatum,
   type SankeyNodeDatum,
@@ -74,105 +75,23 @@ function AnimatedNode({
   isLeftSide,
   showLabels,
 }: AnimatedNodeProps) {
-  const [isAnimated, setIsAnimated] = useState(false);
-  const [showNameLabel, setShowNameLabel] = useState(false);
-  const [showValueLabel, setShowValueLabel] = useState(false);
+  const { enterTransition, revealEpoch } = useSankey();
 
-  // Nodes animate during first 60% of total duration
   const nodeAnimDuration = animationDuration * 0.6;
-  // Stagger delay based on node index
-  const staggerDelay = (index / totalNodes) * nodeAnimDuration * 0.4;
-  const nodeDuration = nodeAnimDuration * 0.6;
+  const staggerDelaySec =
+    ((index / totalNodes) * nodeAnimDuration * 0.4) / 1000;
+  const nameLabelDelaySec =
+    staggerDelaySec + (nodeAnimDuration * 0.6 * 0.3) / 1000;
+  const valueLabelDelaySec = nameLabelDelaySec + 0.06;
 
-  // Label delays - staggered after node appears
-  const nameLabelDelay = staggerDelay + nodeDuration * 0.3;
-  const valueLabelDelay = nameLabelDelay + 60; // 60ms after name label
-
-  useEffect(() => {
-    const nodeTimeout = setTimeout(() => {
-      setIsAnimated(true);
-    }, staggerDelay);
-
-    const nameTimeout = setTimeout(() => {
-      setShowNameLabel(true);
-    }, nameLabelDelay);
-
-    const valueTimeout = setTimeout(() => {
-      setShowValueLabel(true);
-    }, valueLabelDelay);
-
-    return () => {
-      clearTimeout(nodeTimeout);
-      clearTimeout(nameTimeout);
-      clearTimeout(valueTimeout);
-    };
-  }, [staggerDelay, nameLabelDelay, valueLabelDelay]);
-
-  // Calculate opacity - instant transitions for hover
-  const getOpacity = () => {
-    if (!isAnimated) {
-      return 0;
-    }
-    if (isFaded) {
-      return fadedOpacity;
-    }
-    return 1;
-  };
-
-  // Calculate target X positions for labels
-  const getNameLabelX = () => {
-    if (!showNameLabel) {
-      return isLeftSide ? x + 8 : x + width - 8;
-    }
-    return isLeftSide ? x - 12 : x + width + 12;
-  };
-
-  const getValueLabelX = () => {
-    if (!showValueLabel) {
-      return isLeftSide ? x + 8 : x + width - 8;
-    }
-    return isLeftSide ? x - 12 : x + width + 12;
-  };
-
-  const getNameOpacity = () => {
-    if (!showNameLabel) {
-      return 0;
-    }
-    if (isFaded) {
-      return fadedOpacity;
-    }
-    return 1;
-  };
-
-  const getValueOpacity = () => {
-    if (!showValueLabel) {
-      return 0;
-    }
-    return isFaded ? fadedOpacity * 0.8 : 0.6;
-  };
-
-  const nameLabelX = getNameLabelX();
-  const valueLabelX = getValueLabelX();
-  const nameOpacity = getNameOpacity();
-  const valueOpacity = getValueOpacity();
-
-  // Use Framer Motion transitions - same as links: 180ms ease-out
-  const hoverTransition = { duration: 0.18, ease: "easeOut" as const };
-  const nodeTransition = {
-    duration: nodeDuration / 1000,
-    ease: "easeOut" as const,
-  };
-  const labelTransition = {
-    duration: 0.25,
-    ease: "easeOut" as const,
-  };
-  const currentNodeTransition = isAnimated ? hoverTransition : nodeTransition;
-  const currentNameTransition = showNameLabel
-    ? hoverTransition
-    : labelTransition;
-  const currentValueTransition = showValueLabel
-    ? hoverTransition
-    : labelTransition;
+  const nodeEnter = transitionWithDelay(enterTransition, staggerDelaySec);
+  const nameEnter = transitionWithDelay(enterTransition, nameLabelDelaySec);
+  const valueEnter = transitionWithDelay(enterTransition, valueLabelDelaySec);
+  const nameLabelX = isLeftSide ? x - 12 : x + width + 12;
+  const valueLabelX = isLeftSide ? x - 12 : x + width + 12;
+  const nodeOpacity = isFaded ? fadedOpacity : 1;
+  const nameOpacity = isFaded ? fadedOpacity : 1;
+  const valueOpacity = isFaded ? fadedOpacity * 0.8 : 0.6;
 
   return (
     <motion.g
@@ -181,20 +100,15 @@ function AnimatedNode({
       style={{ cursor: "pointer" }}
     >
       <motion.rect
-        animate={{
-          opacity: getOpacity(),
-          scaleY: isAnimated ? 1 : 0,
-        }}
+        animate={{ opacity: nodeOpacity, scaleY: 1 }}
         fill={fill}
         height={height}
-        initial={{
-          opacity: 0,
-          scaleY: 0,
-        }}
+        initial={{ opacity: 0, scaleY: 0 }}
+        key={`node-${index}-${revealEpoch}`}
         rx={rx}
         ry={rx}
         style={{ originY: 0.5 }}
-        transition={currentNodeTransition}
+        transition={nodeEnter}
         width={width}
         x={x}
         y={y}
@@ -202,29 +116,25 @@ function AnimatedNode({
       {showLabels && (
         <>
           <motion.text
-            animate={{
-              opacity: nameOpacity,
-              x: nameLabelX,
-            }}
+            animate={{ opacity: nameOpacity, x: nameLabelX }}
             className="fill-foreground font-medium text-[13px]"
             dy="0.35em"
             initial={{ opacity: 0, x: isLeftSide ? x + 8 : x + width - 8 }}
+            key={`name-${index}-${revealEpoch}`}
             textAnchor={isLeftSide ? "end" : "start"}
-            transition={currentNameTransition}
+            transition={nameEnter}
             y={y + height / 2}
           >
             {name}
           </motion.text>
           <motion.text
-            animate={{
-              opacity: valueOpacity,
-              x: valueLabelX,
-            }}
+            animate={{ opacity: valueOpacity, x: valueLabelX }}
             className="fill-foreground text-[11px]"
             dy="0.35em"
             initial={{ opacity: 0, x: isLeftSide ? x + 8 : x + width - 8 }}
+            key={`value-${index}-${revealEpoch}`}
             textAnchor={isLeftSide ? "end" : "start"}
-            transition={currentValueTransition}
+            transition={valueEnter}
             y={y + height / 2 + 16}
           >
             {value.toLocaleString()} sessions

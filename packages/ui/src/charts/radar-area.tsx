@@ -1,8 +1,10 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { MotionValue } from "motion/react";
+import { motion, useTransform } from "motion/react";
+import { useMemo } from "react";
 import { radarCssVars, useRadar } from "./radar-context";
+import { useMountProgress } from "./use-mount-progress";
 
 export interface RadarAreaProps {
   /** Index of this area in the data array */
@@ -23,6 +25,38 @@ function getStrokeWidth(isHovered: boolean): number {
   return isHovered ? 3 : 2;
 }
 
+function RadarPoint({
+  mountProgress,
+  target,
+  color,
+  isHovered,
+  metricKey,
+}: {
+  mountProgress: MotionValue<number>;
+  target: { x: number; y: number };
+  color: string;
+  isHovered: boolean;
+  metricKey: string;
+}) {
+  const cx = useTransform(mountProgress, (t) => target.x * t);
+  const cy = useTransform(mountProgress, (t) => target.y * t);
+
+  return (
+    <motion.circle
+      cx={cx}
+      cy={cy}
+      fill={color}
+      key={metricKey}
+      r={isHovered ? 6 : 4}
+      stroke={radarCssVars.background}
+      strokeWidth={2}
+      transition={{
+        r: { type: "spring", stiffness: 300, damping: 20 },
+      }}
+    />
+  );
+}
+
 export function RadarArea({
   index,
   color: colorProp,
@@ -38,19 +72,17 @@ export function RadarArea({
     hoveredIndex,
     setHoveredIndex,
     animate,
+    enterDurationMs,
+    staggerScale,
+    enterTransition,
+    motionReplayKey,
     getColor,
     getPointPosition,
   } = useRadar();
 
+  const durationFactor = enterDurationMs / 1100;
   const areaData = data[index];
 
-  // Track if initial animation is complete (must be before early return)
-  const hasAnimated = useRef(false);
-  const [animatedPositions, setAnimatedPositions] = useState<
-    { x: number; y: number }[]
-  >(() => metrics.map(() => ({ x: 0, y: 0 })));
-
-  // Calculate target positions for all metrics
   const targetPositions = useMemo(() => {
     if (!areaData) {
       return metrics.map(() => ({ x: 0, y: 0 }));
@@ -61,61 +93,28 @@ export function RadarArea({
     });
   }, [metrics, areaData, getPointPosition]);
 
-  // Animation delays
-  const gridStagger = 0.08;
-  const campaignBaseDelay = levels * gridStagger + 0.2;
-  const campaignStagger = 0.15;
+  const gridStagger = 0.08 * staggerScale * durationFactor;
+  const campaignBaseDelay = (levels * gridStagger + 0.2) * durationFactor;
+  const campaignStagger = 0.15 * staggerScale * durationFactor;
   const animationDelay = campaignBaseDelay + index * campaignStagger;
 
-  // Initial expand animation (runs once on mount)
-  useEffect(() => {
-    if (!animate || hasAnimated.current) {
-      setAnimatedPositions(targetPositions);
-      return;
+  const mountProgress = useMountProgress(
+    enterTransition,
+    animationDelay,
+    `${motionReplayKey}-${index}`
+  );
+
+  const animatedPositions = useTransform(mountProgress, (t) =>
+    targetPositions.map((p) => ({ x: p.x * t, y: p.y * t }))
+  );
+
+  const pathD = useTransform(animatedPositions, (positions) => {
+    if (positions.length === 0) {
+      return "";
     }
+    return `M ${positions.map((p) => `${p.x},${p.y}`).join(" L ")} Z`;
+  });
 
-    const metricStagger = 0.06;
-    const timeouts: NodeJS.Timeout[] = [];
-
-    // Animate each metric from center to its position with stagger
-    for (let i = 0; i < metrics.length; i++) {
-      const target = targetPositions[i];
-      if (!target) {
-        continue;
-      }
-      const timeout = setTimeout(
-        () => {
-          setAnimatedPositions((prev) => {
-            const newPositions = [...prev];
-            newPositions[i] = { x: target.x, y: target.y };
-            return newPositions;
-          });
-        },
-        (animationDelay + i * metricStagger) * 1000
-      );
-      timeouts.push(timeout);
-    }
-
-    // Mark animation complete
-    const completeTimeout = setTimeout(
-      () => {
-        hasAnimated.current = true;
-      },
-      (animationDelay + metrics.length * metricStagger) * 1000 + 500
-    );
-    timeouts.push(completeTimeout);
-
-    return () => timeouts.forEach(clearTimeout);
-  }, [animate, animationDelay, metrics.length, targetPositions]);
-
-  // After initialization, update positions immediately when data changes
-  useEffect(() => {
-    if (hasAnimated.current) {
-      setAnimatedPositions(targetPositions);
-    }
-  }, [targetPositions]);
-
-  // Early return after all hooks
   if (!areaData) {
     return null;
   }
@@ -124,9 +123,6 @@ export function RadarArea({
   const isHovered = hoveredIndex === index;
   const isOtherHovered = hoveredIndex !== null && hoveredIndex !== index;
 
-  // Create path from positions
-  const pathD = `M ${animatedPositions.map((p) => `${p.x},${p.y}`).join(" L ")} Z`;
-
   return (
     <motion.g
       animate={{
@@ -134,25 +130,21 @@ export function RadarArea({
         scale: isHovered ? 1.05 : 1,
       }}
       className={className}
-      initial={{ opacity: 0 }}
+      initial={{ opacity: animate ? 0 : 1 }}
       onMouseEnter={() => setHoveredIndex(index)}
       onMouseLeave={() => setHoveredIndex(null)}
       style={{ transformOrigin: "0px 0px", cursor: "pointer" }}
       transition={{
-        opacity: {
-          duration: 0.15,
-          delay: hasAnimated.current ? 0 : animationDelay * 0.5,
-        },
+        opacity: { duration: 0.15 },
         scale: { type: "spring", stiffness: 400, damping: 25 },
       }}
     >
-      {/* Area polygon */}
       <motion.path
         animate={{
-          d: pathD,
           fillOpacity: isHovered ? 0.35 : 0.15,
           strokeWidth: showStroke ? getStrokeWidth(isHovered) : 0,
         }}
+        d={pathD}
         fill={color}
         stroke={showStroke ? color : "none"}
         strokeLinejoin="round"
@@ -161,35 +153,25 @@ export function RadarArea({
             showGlow && isHovered ? `drop-shadow(0 0 12px ${color})` : "none",
         }}
         transition={{
-          d: { type: "spring", stiffness: 80, damping: 15, mass: 1 },
           fillOpacity: { duration: 0.2 },
           strokeWidth: { duration: 0.2 },
         }}
       />
 
-      {/* Data point circles */}
       {showPoints &&
         metrics.map((metric, i) => {
-          const point = animatedPositions[i];
-          if (!point) {
+          const target = targetPositions[i];
+          if (!target) {
             return null;
           }
           return (
-            <motion.circle
-              animate={{
-                cx: point.x,
-                cy: point.y,
-                r: isHovered ? 6 : 4,
-              }}
-              fill={color}
+            <RadarPoint
+              color={color}
+              isHovered={isHovered}
               key={metric.key}
-              stroke={radarCssVars.background}
-              strokeWidth={2}
-              transition={{
-                cx: { type: "spring", stiffness: 80, damping: 15, mass: 1 },
-                cy: { type: "spring", stiffness: 80, damping: 15, mass: 1 },
-                r: { type: "spring", stiffness: 300, damping: 20 },
-              }}
+              metricKey={metric.key}
+              mountProgress={mountProgress}
+              target={target}
             />
           );
         })}

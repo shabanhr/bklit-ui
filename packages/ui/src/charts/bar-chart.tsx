@@ -3,6 +3,7 @@
 import { localPoint } from "@visx/event";
 import { ParentSize } from "@visx/responsive";
 import { scaleBand, scaleLinear } from "@visx/scale";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -15,6 +16,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
+import { DEFAULT_ANIMATION_EASING } from "./animation";
 import type { BarProps } from "./bar";
 import {
   ChartProvider,
@@ -22,6 +24,7 @@ import {
   type Margin,
   type TooltipData,
 } from "./chart-context";
+import { isGradientDefComponent, isPatternDefComponent } from "./chart-defs";
 
 export type BarOrientation = "vertical" | "horizontal";
 
@@ -34,6 +37,12 @@ export interface BarChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 1100 */
   animationDuration?: number;
+  /** CSS easing for bar grow transitions. */
+  animationEasing?: string;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers enter replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -120,6 +129,9 @@ interface ChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  animationEasing: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   barGap: number;
   barWidthProp?: number;
   orientation: BarOrientation;
@@ -136,6 +148,9 @@ function ChartInner({
   xDataKey,
   margin,
   animationDuration,
+  animationEasing,
+  enterTransition,
+  revealSignature = "",
   barGap,
   barWidthProp,
   orientation,
@@ -146,6 +161,7 @@ function ChartInner({
 }: ChartInnerProps) {
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [revealEpoch, setRevealEpoch] = useState(0);
   const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
 
   const isHorizontal = orientation === "horizontal";
@@ -294,13 +310,16 @@ function ChartInner({
     return scale;
   }, [categoryScale, innerWidth, data.length]);
 
-  // Animation timing
+  // Animation timing — replay when motion settings change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
   useEffect(() => {
+    setRevealEpoch((n) => n + 1);
+    setIsLoaded(false);
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, animationDuration);
     return () => clearTimeout(timer);
-  }, [animationDuration]);
+  }, [animationDuration, revealSignature]);
 
   // Mouse move handler
   const handleMouseMove = useCallback(
@@ -441,20 +460,6 @@ function ChartInner({
 
   const canInteract = isLoaded;
 
-  // Helper to check if a component is a gradient or pattern definition
-  const isDefsComponent = (child: ReactElement): boolean => {
-    const displayName =
-      (child.type as { displayName?: string })?.displayName ||
-      (child.type as { name?: string })?.name ||
-      "";
-    return (
-      displayName.includes("Gradient") ||
-      displayName.includes("Pattern") ||
-      displayName === "LinearGradient" ||
-      displayName === "RadialGradient"
-    );
-  };
-
   // Separate children into defs, pre-overlay, and post-overlay
   const defsChildren: ReactElement[] = [];
   const preOverlayChildren: ReactElement[] = [];
@@ -465,8 +470,10 @@ function ChartInner({
       return;
     }
 
-    if (isDefsComponent(child)) {
+    if (isGradientDefComponent(child)) {
       defsChildren.push(child);
+    } else if (isPatternDefComponent(child)) {
+      preOverlayChildren.push(child);
     } else if (isPostOverlayComponent(child)) {
       postOverlayChildren.push(child);
     } else {
@@ -492,6 +499,9 @@ function ChartInner({
     lines,
     isLoaded,
     animationDuration,
+    animationEasing,
+    enterTransition,
+    revealEpoch,
     xAccessor: xAccessorDate,
     dateLabels,
     // Bar-specific properties
@@ -545,6 +555,9 @@ export function BarChart({
   xDataKey = "name",
   margin: marginProp,
   animationDuration = 1100,
+  animationEasing = DEFAULT_ANIMATION_EASING,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   barGap = 0.2,
@@ -567,13 +580,16 @@ export function BarChart({
         {({ width, height }) => (
           <ChartInner
             animationDuration={animationDuration}
+            animationEasing={animationEasing}
             barGap={barGap}
             barWidthProp={barWidth}
             containerRef={containerRef}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
             orientation={orientation}
+            revealSignature={revealSignature}
             stacked={stacked}
             stackGap={stackGap}
             width={width}

@@ -3,6 +3,7 @@
 import { Group } from "@visx/group";
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear } from "@visx/scale";
+import type { Transition } from "motion/react";
 import { type ReactNode, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +27,14 @@ export interface RadarChartProps {
   margin?: number;
   /** Enable animations. Default: true */
   animate?: boolean;
+  /** Enter animation budget in ms. Default: 1100 */
+  enterDurationMs?: number;
+  /** Scales stagger timing (1 = default). */
+  staggerScale?: number;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Changes when motion settings change — replays enter animations. */
+  motionReplayKey?: string;
   /** Controlled hover state - index of hovered area */
   hoveredIndex?: number | null;
   /** Callback when hover state changes */
@@ -44,6 +53,10 @@ interface RadarChartInnerProps {
   levels: number;
   margin: number;
   animate: boolean;
+  enterDurationMs: number;
+  staggerScale: number;
+  enterTransition?: Transition;
+  motionReplayKey: string;
   children: ReactNode;
   hoveredIndexProp?: number | null;
   onHoverChange?: (index: number | null) => void;
@@ -57,6 +70,10 @@ function RadarChartInner({
   levels,
   margin,
   animate,
+  enterDurationMs,
+  staggerScale,
+  enterTransition,
+  motionReplayKey,
   children,
   hoveredIndexProp,
   onHoverChange,
@@ -144,6 +161,10 @@ function RadarChartInner({
     hoveredIndex,
     setHoveredIndex,
     animate,
+    enterDurationMs,
+    staggerScale,
+    enterTransition,
+    motionReplayKey,
     getColor,
     getAngle,
     getPointPosition,
@@ -173,6 +194,10 @@ export function RadarChart({
   levels = 5,
   margin = 60,
   animate = true,
+  enterDurationMs = 1100,
+  staggerScale = 1,
+  enterTransition,
+  motionReplayKey = "",
   className = "",
   hoveredIndex,
   onHoverChange,
@@ -188,12 +213,16 @@ export function RadarChart({
         <RadarChartInner
           animate={animate}
           data={data}
+          enterDurationMs={enterDurationMs}
+          enterTransition={enterTransition}
           height={fixedSize}
           hoveredIndexProp={hoveredIndex}
           levels={levels}
           margin={margin}
           metrics={metrics}
+          motionReplayKey={motionReplayKey}
           onHoverChange={onHoverChange}
+          staggerScale={staggerScale}
           width={fixedSize}
         >
           {children}
@@ -210,12 +239,16 @@ export function RadarChart({
           <RadarChartInner
             animate={animate}
             data={data}
+            enterDurationMs={enterDurationMs}
+            enterTransition={enterTransition}
             height={height}
             hoveredIndexProp={hoveredIndex}
             levels={levels}
             margin={margin}
             metrics={metrics}
+            motionReplayKey={motionReplayKey}
             onHoverChange={onHoverChange}
+            staggerScale={staggerScale}
             width={width}
           >
             {children}

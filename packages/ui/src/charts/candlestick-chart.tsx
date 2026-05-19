@@ -3,6 +3,7 @@
 import { ParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { bisector } from "d3-array";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -35,6 +36,10 @@ export interface CandlestickChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 1500 */
   animationDuration?: number;
+  /** Motion enter transition (spring or cubic-bezier tween). */
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers enter replay when it changes. */
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -62,6 +67,8 @@ interface ChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  enterTransition?: Transition;
+  revealSignature?: string;
   candleGap: number;
   candleWidthProp?: number;
   xDomain?: [Date, Date];
@@ -77,6 +84,8 @@ function ChartInner({
   xDataKey,
   margin,
   animationDuration,
+  enterTransition,
+  revealSignature = "",
   candleGap,
   candleWidthProp,
   xDomain,
@@ -85,6 +94,7 @@ function ChartInner({
   containerRef,
 }: ChartInnerProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [revealEpoch, setRevealEpoch] = useState(0);
   const [hoveredCandleIndex, setHoveredCandleIndex] = useState<number | null>(
     null
   );
@@ -170,10 +180,13 @@ function ChartInner({
     [data, xAccessor]
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revealSignature
   useEffect(() => {
+    setRevealEpoch((n) => n + 1);
+    setIsLoaded(false);
     const timer = setTimeout(() => setIsLoaded(true), animationDuration);
     return () => clearTimeout(timer);
-  }, [animationDuration]);
+  }, [animationDuration, revealSignature]);
 
   const {
     tooltipData,
@@ -246,6 +259,8 @@ function ChartInner({
     lines,
     isLoaded,
     animationDuration,
+    enterTransition,
+    revealEpoch,
     xAccessor,
     dateLabels,
     selection: selection ?? null,
@@ -295,6 +310,8 @@ export function CandlestickChart({
   xDataKey = "date",
   margin: marginProp,
   animationDuration = 1100,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   style,
@@ -322,8 +339,10 @@ export function CandlestickChart({
             candleWidthProp={candleWidth}
             containerRef={containerRef}
             data={dataAsRecords}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
+            revealSignature={revealSignature}
             width={width}
             xDataKey={xDataKey}
             xDomain={xDomain}

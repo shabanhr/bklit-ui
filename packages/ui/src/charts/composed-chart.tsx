@@ -1,6 +1,7 @@
 "use client";
 
 import { ParentSize } from "@visx/responsive";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -23,6 +24,10 @@ export interface ComposedChartProps {
   xDataKey?: string;
   margin?: Partial<Margin>;
   animationDuration?: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  /** Signature of motion URL state — triggers reveal replay when it changes. */
+  revealSignature?: string;
   aspectRatio?: string;
   className?: string;
   children: ReactNode;
@@ -161,6 +166,9 @@ interface ChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
   barSize?: number;
@@ -177,6 +185,9 @@ function ChartInner({
   xDataKey,
   margin,
   animationDuration,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   children,
   containerRef,
   barSize,
@@ -225,6 +236,7 @@ function ChartInner({
   return (
     <TimeSeriesChartInner
       animationDuration={animationDuration}
+      animationEasing={animationEasing}
       clipPathId="composed-chart-grow-clip"
       composedBarDataKeys={barDataKeys.length > 0 ? barDataKeys : undefined}
       composedBarGap={barGap}
@@ -235,9 +247,11 @@ function ChartInner({
       composedStackOffsets={composedStackOffsets}
       containerRef={containerRef}
       data={data}
+      enterTransition={enterTransition}
       height={height}
       lines={lines}
       margin={margin}
+      revealSignature={revealSignature}
       width={width}
       xDataKey={xDataKey}
       yScaleDomainMax={yScaleDomainMax}
@@ -252,6 +266,9 @@ export function ComposedChart({
   xDataKey = "date",
   margin: marginProp,
   animationDuration = 1100,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   children,
@@ -274,13 +291,16 @@ export function ComposedChart({
         {({ width, height }) => (
           <ChartInner
             animationDuration={animationDuration}
+            animationEasing={animationEasing}
             barGap={barGap}
             barSize={barSize}
             containerRef={containerRef}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
             maxBarSize={maxBarSize}
+            revealSignature={revealSignature}
             stacked={stacked}
             stackGap={stackGap}
             width={width}

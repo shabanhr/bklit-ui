@@ -1,6 +1,7 @@
 "use client";
 
 import { ParentSize } from "@visx/responsive";
+import type { Transition } from "motion/react";
 import {
   Children,
   isValidElement,
@@ -22,6 +23,10 @@ export interface LineChartProps {
   margin?: Partial<Margin>;
   /** Animation duration in milliseconds. Default: 1100 */
   animationDuration?: number;
+  /** CSS easing for clip-reveal. Default: cubic-bezier(0.85, 0, 0.15, 1) */
+  animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   /** Aspect ratio as "width / height". Default: "2 / 1" */
   aspectRatio?: string;
   /** Additional class name for the container */
@@ -74,6 +79,9 @@ interface ChartInnerProps {
   xDataKey: string;
   margin: Margin;
   animationDuration: number;
+  animationEasing?: string;
+  enterTransition?: Transition;
+  revealSignature?: string;
   children: ReactNode;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -85,6 +93,9 @@ function ChartInner({
   xDataKey,
   margin,
   animationDuration,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   children,
   containerRef,
 }: ChartInnerProps) {
@@ -93,12 +104,15 @@ function ChartInner({
   return (
     <TimeSeriesChartInner
       animationDuration={animationDuration}
+      animationEasing={animationEasing}
       clipPathId="chart-grow-clip"
       containerRef={containerRef}
       data={data}
+      enterTransition={enterTransition}
       height={height}
       lines={lines}
       margin={margin}
+      revealSignature={revealSignature}
       width={width}
       xDataKey={xDataKey}
     >
@@ -112,6 +126,9 @@ export function LineChart({
   xDataKey = "date",
   margin: marginProp,
   animationDuration = 1100,
+  animationEasing,
+  enterTransition,
+  revealSignature,
   aspectRatio = "2 / 1",
   className = "",
   children,
@@ -129,10 +146,13 @@ export function LineChart({
         {({ width, height }) => (
           <ChartInner
             animationDuration={animationDuration}
+            animationEasing={animationEasing}
             containerRef={containerRef}
             data={data}
+            enterTransition={enterTransition}
             height={height}
             margin={margin}
+            revealSignature={revealSignature}
             width={width}
             xDataKey={xDataKey}
           >

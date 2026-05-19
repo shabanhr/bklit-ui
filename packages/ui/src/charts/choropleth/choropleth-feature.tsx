@@ -3,6 +3,7 @@
 import { geoCentroid } from "d3-geo";
 import { motion } from "motion/react";
 import { useCallback, useMemo } from "react";
+import { transitionWithDelay } from "../motion-utils";
 import {
   type ChoroplethFeature as ChoroplethFeatureType,
   defaultChoroplethColors,
@@ -58,8 +59,10 @@ function AnimatedFeaturePath({
   onMouseEnter,
   onMouseLeave,
 }: AnimatedFeaturePathProps) {
-  // Calculate stagger delay based on feature index
-  const staggerDelay = (index / totalFeatures) * animationDuration * 0.5;
+  const { enterTransition, revealEpoch } = useChoropleth();
+  const staggerDelaySec =
+    ((index / totalFeatures) * animationDuration * 0.5) / 1000;
+  const enterAnim = transitionWithDelay(enterTransition, staggerDelaySec);
 
   // Calculate target opacity - slightly boost highlighted features
   const getTargetOpacity = () => {
@@ -80,16 +83,14 @@ function AnimatedFeaturePath({
       d={path}
       fill={fill}
       initial={{ opacity: 0 }}
+      key={`feature-${index}-${revealEpoch}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       stroke={stroke}
       strokeWidth={strokeWidth}
       transition={{
         opacity: { duration: 0.18, ease: "easeOut" },
-        default: {
-          duration: animationDuration / 1000,
-          delay: staggerDelay / 1000,
-        },
+        default: enterAnim,
       }}
     />
   );

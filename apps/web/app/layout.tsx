@@ -5,15 +5,21 @@ import { RootProvider } from "fumadocs-ui/provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-const geist = Geist({
+const geistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-sans",
 });
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
+});
+
+const geistHeading = Geist({
+  subsets: ["latin"],
+  variable: "--font-heading",
 });
 
 export const metadata: Metadata = {
@@ -41,7 +47,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={cn(
+        geistSans.variable,
+        geistMono.variable,
+        geistHeading.variable,
+        "font-sans"
+      )}
       lang="en"
       suppressHydrationWarning
     >
