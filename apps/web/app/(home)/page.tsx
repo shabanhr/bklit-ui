@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AnimatedBrand } from "@/components/animated-brand";
 import { HomeComponents } from "@/components/home-components";
-import { TestimonialMarquee } from "@/components/testimonial-marquee";
+import { TestimonialGrid } from "@/components/testimonial-grid";
 import { Button } from "@/components/ui/button";
 
 const staggerDelay = 0.12;
@@ -105,13 +105,12 @@ export default function HomePage() {
 
             <motion.div
               animate="animate"
-              className="relative w-full before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:z-10 before:w-32 before:bg-gradient-to-r before:from-background before:to-transparent after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:z-10 after:w-32 after:bg-gradient-to-l after:from-background after:to-transparent"
+              className="container mx-auto w-full max-w-6xl"
               initial="initial"
               transition={{ delay: staggerDelay * 3, duration: 0.6 }}
               variants={fadeInOnly}
             >
-              <TestimonialMarquee direction="ltr" duration={70} />
-              <TestimonialMarquee direction="rtl" duration={70} />
+              <TestimonialGrid />
             </motion.div>
           </>
         )}
