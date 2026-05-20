@@ -11,6 +11,7 @@
   ],
   "registryDependencies": [
     "@bklit/chart-context",
+    "@bklit/chart-animation",
     "@bklit/grid",
     "@bklit/x-axis",
     "@bklit/chart-tooltip",

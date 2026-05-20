@@ -84,6 +84,40 @@
       ]
     },
     {
+      "name": "chart-animation",
+      "type": "registry:component",
+      "title": "Chart Animation",
+      "description": "Shared motion helpers for chart enter transitions, clip reveals, and staggered animations",
+      "dependencies": ["motion"],
+      "files": [
+        {
+          "path": "src/charts/animation.ts",
+          "type": "registry:component",
+          "target": "components/charts/animation.ts"
+        },
+        {
+          "path": "src/charts/motion-utils.ts",
+          "type": "registry:component",
+          "target": "components/charts/motion-utils.ts"
+        },
+        {
+          "path": "src/charts/use-mount-progress.ts",
+          "type": "registry:component",
+          "target": "components/charts/use-mount-progress.ts"
+        },
+        {
+          "path": "src/charts/chart-reveal-clip.tsx",
+          "type": "registry:component",
+          "target": "components/charts/chart-reveal-clip.tsx"
+        },
+        {
+          "path": "src/charts/chart-defs.ts",
+          "type": "registry:component",
+          "target": "components/charts/chart-defs.ts"
+        }
+      ]
+    },
+    {
       "name": "grid",
       "type": "registry:component",
       "title": "Chart Grid",
@@ -272,6 +306,7 @@
       "description": "A composable area chart with gradient fills and animations",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/chart-tooltip",
@@ -349,6 +384,7 @@
       "description": "A composable bar chart with horizontal/vertical orientations and animations",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/chart-tooltip",
         "@bklit/utils"
@@ -389,6 +425,7 @@
       "description": "A composable line chart with multiple series support",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/chart-tooltip",
@@ -466,6 +503,7 @@
       "description": "A composable OHLC candlestick chart with gradients, patterns, tooltips, and hover interactions",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/y-axis",
@@ -496,7 +534,7 @@
       "type": "registry:component",
       "title": "Pie Chart",
       "description": "A composable pie chart with animations and customizable slices",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": [
         "@number-flow/react",
         "@visx/responsive@4.0.1-alpha.0",
@@ -542,7 +580,7 @@
       "type": "registry:component",
       "title": "Radar Chart",
       "description": "A composable radar/spider chart with multiple data series",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": ["@visx/responsive@4.0.1-alpha.0", "d3-shape", "motion"],
       "files": [
         {
@@ -582,7 +620,7 @@
       "type": "registry:component",
       "title": "Ring Chart",
       "description": "A composable donut/ring chart with progress indicators",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": [
         "@visx/responsive@4.0.1-alpha.0",
         "@number-flow/react",
@@ -662,7 +700,7 @@
       "type": "registry:component",
       "title": "Choropleth Map",
       "description": "A geographic map chart with zoom, pan, and data visualization",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": [
         "@visx/geo@4.0.1-alpha.0",
         "@visx/responsive@4.0.1-alpha.0",
@@ -709,7 +747,7 @@
       "type": "registry:component",
       "title": "Funnel Chart",
       "description": "An animated funnel chart with multi-layer halo rings, hover interactions, and staggered entrance animations",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": ["motion"],
       "files": [
         {
@@ -724,7 +762,7 @@
       "type": "registry:component",
       "title": "Sankey Diagram",
       "description": "A flow diagram for visualizing data transfers between nodes",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": ["@bklit/chart-animation", "@bklit/utils"],
       "dependencies": [
         "@visx/gradient@4.0.1-alpha.0",
         "@visx/pattern@4.0.1-alpha.0",
