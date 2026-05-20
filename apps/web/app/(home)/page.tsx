@@ -1,12 +1,13 @@
 "use client";
 
+import { ArrowRightIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 import { AnimatedBrand } from "@/components/animated-brand";
 import { HomeComponents } from "@/components/home-components";
 import { TestimonialMarquee } from "@/components/testimonial-marquee";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const staggerDelay = 0.12;
@@ -30,13 +31,27 @@ export default function HomePage() {
       <div className="max-w-xl space-y-6">
         <motion.div
           animate="animate"
-          className="mx-auto flex w-fit items-center justify-center rounded-full border p-px"
+          className="mx-auto flex w-fit"
           initial="initial"
           transition={{ duration: 0.5 }}
           variants={fadeInBlur}
         >
-          <Badge variant="secondary">Version</Badge>
-          <Badge variant="ghost">Pre-release</Badge>
+          <Button
+            asChild
+            className="h-auto rounded-full px-0.5 py-0.5"
+            size="lg"
+            variant="outline"
+          >
+            <Link href="/studio" title="Studio">
+              <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                Introducing
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1">
+                Studio
+                <HugeiconsIcon icon={ArrowRightIcon} size={14} />
+              </span>
+            </Link>
+          </Button>
         </motion.div>
 
         <AnimatedBrand onAnimationComplete={() => setShowContent(true)} />
