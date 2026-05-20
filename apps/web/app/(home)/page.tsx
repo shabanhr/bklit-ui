@@ -27,8 +27,8 @@ export default function HomePage() {
   const [showContent, setShowContent] = useState(false);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center space-y-24 px-4 py-24 text-center">
-      <div className="max-w-xl space-y-6">
+    <main className="flex flex-1 flex-col items-center justify-center space-y-24 px-4 py-18 text-center">
+      <div className="max-w-xl space-y-5">
         <motion.div
           animate="animate"
           className="mx-auto flex w-fit"
