@@ -8,7 +8,10 @@
       "type": "registry:lib",
       "title": "Utilities",
       "description": "Utility functions for className merging with clsx and tailwind-merge",
-      "dependencies": ["clsx", "tailwind-merge"],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "files": [
         {
           "path": "src/lib/utils.ts",
@@ -22,7 +25,9 @@
       "type": "registry:component",
       "title": "Chart Context",
       "description": "Shared context and hooks for Bklit chart components",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@visx/event@4.0.1-alpha.0",
         "@visx/responsive@4.0.1-alpha.0",
@@ -84,12 +89,52 @@
       ]
     },
     {
+      "name": "chart-animation",
+      "type": "registry:component",
+      "title": "Chart Animation",
+      "description": "Shared motion helpers for chart enter transitions, clip reveals, and staggered animations",
+      "dependencies": [
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/animation.ts",
+          "type": "registry:component",
+          "target": "components/charts/animation.ts"
+        },
+        {
+          "path": "src/charts/motion-utils.ts",
+          "type": "registry:component",
+          "target": "components/charts/motion-utils.ts"
+        },
+        {
+          "path": "src/charts/use-mount-progress.ts",
+          "type": "registry:component",
+          "target": "components/charts/use-mount-progress.ts"
+        },
+        {
+          "path": "src/charts/chart-reveal-clip.tsx",
+          "type": "registry:component",
+          "target": "components/charts/chart-reveal-clip.tsx"
+        },
+        {
+          "path": "src/charts/chart-defs.ts",
+          "type": "registry:component",
+          "target": "components/charts/chart-defs.ts"
+        }
+      ]
+    },
+    {
       "name": "grid",
       "type": "registry:component",
       "title": "Chart Grid",
       "description": "Grid lines for charts",
-      "registryDependencies": ["@bklit/chart-context"],
-      "dependencies": ["@visx/grid@4.0.1-alpha.0"],
+      "registryDependencies": [
+        "@bklit/chart-context"
+      ],
+      "dependencies": [
+        "@visx/grid@4.0.1-alpha.0"
+      ],
       "files": [
         {
           "path": "src/charts/grid.tsx",
@@ -103,7 +148,10 @@
       "type": "registry:component",
       "title": "X Axis",
       "description": "X-axis component for time-series charts",
-      "registryDependencies": ["@bklit/chart-context", "@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-context",
+        "@bklit/utils"
+      ],
       "files": [
         {
           "path": "src/charts/x-axis.tsx",
@@ -117,7 +165,10 @@
       "type": "registry:component",
       "title": "Y Axis",
       "description": "Y-axis component for value labels in line and area charts",
-      "registryDependencies": ["@bklit/chart-context", "@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-context",
+        "@bklit/utils"
+      ],
       "files": [
         {
           "path": "src/charts/y-axis.tsx",
@@ -131,8 +182,14 @@
       "type": "registry:component",
       "title": "Chart Tooltip",
       "description": "Composable tooltip components for charts",
-      "registryDependencies": ["@bklit/chart-context", "@bklit/utils"],
-      "dependencies": ["@number-flow/react", "motion"],
+      "registryDependencies": [
+        "@bklit/chart-context",
+        "@bklit/utils"
+      ],
+      "dependencies": [
+        "@number-flow/react",
+        "motion"
+      ],
       "files": [
         {
           "path": "src/charts/tooltip/chart-tooltip.tsx",
@@ -176,8 +233,12 @@
       "type": "registry:component",
       "title": "Chart Legend",
       "description": "Composable legend components for charts",
-      "registryDependencies": ["@bklit/utils"],
-      "dependencies": ["@number-flow/react"],
+      "registryDependencies": [
+        "@bklit/utils"
+      ],
+      "dependencies": [
+        "@number-flow/react"
+      ],
       "cssVars": {
         "light": {
           "--legend": "oklch(1 0 0)",
@@ -272,6 +333,7 @@
       "description": "A composable area chart with gradient fills and animations",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/chart-tooltip",
@@ -349,6 +411,7 @@
       "description": "A composable bar chart with horizontal/vertical orientations and animations",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/chart-tooltip",
         "@bklit/utils"
@@ -389,6 +452,7 @@
       "description": "A composable line chart with multiple series support",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/chart-tooltip",
@@ -466,6 +530,7 @@
       "description": "A composable OHLC candlestick chart with gradients, patterns, tooltips, and hover interactions",
       "registryDependencies": [
         "@bklit/chart-context",
+        "@bklit/chart-animation",
         "@bklit/grid",
         "@bklit/x-axis",
         "@bklit/y-axis",
@@ -496,7 +561,10 @@
       "type": "registry:component",
       "title": "Pie Chart",
       "description": "A composable pie chart with animations and customizable slices",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@number-flow/react",
         "@visx/responsive@4.0.1-alpha.0",
@@ -542,8 +610,15 @@
       "type": "registry:component",
       "title": "Radar Chart",
       "description": "A composable radar/spider chart with multiple data series",
-      "registryDependencies": ["@bklit/utils"],
-      "dependencies": ["@visx/responsive@4.0.1-alpha.0", "d3-shape", "motion"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
+      "dependencies": [
+        "@visx/responsive@4.0.1-alpha.0",
+        "d3-shape",
+        "motion"
+      ],
       "files": [
         {
           "path": "src/charts/radar-chart.tsx",
@@ -582,7 +657,10 @@
       "type": "registry:component",
       "title": "Ring Chart",
       "description": "A composable donut/ring chart with progress indicators",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@visx/responsive@4.0.1-alpha.0",
         "@number-flow/react",
@@ -621,7 +699,9 @@
       "type": "registry:component",
       "title": "Gauge",
       "description": "Notch-based radial gauge with PieCenter-style center, patterns, and optional arc gradients",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@visx/responsive@4.0.1-alpha.0",
         "@visx/pattern@4.0.1-alpha.0",
@@ -662,7 +742,10 @@
       "type": "registry:component",
       "title": "Choropleth Map",
       "description": "A geographic map chart with zoom, pan, and data visualization",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@visx/geo@4.0.1-alpha.0",
         "@visx/responsive@4.0.1-alpha.0",
@@ -709,8 +792,13 @@
       "type": "registry:component",
       "title": "Funnel Chart",
       "description": "An animated funnel chart with multi-layer halo rings, hover interactions, and staggered entrance animations",
-      "registryDependencies": ["@bklit/utils"],
-      "dependencies": ["motion"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
+      "dependencies": [
+        "motion"
+      ],
       "files": [
         {
           "path": "src/charts/funnel-chart.tsx",
@@ -724,7 +812,10 @@
       "type": "registry:component",
       "title": "Sankey Diagram",
       "description": "A flow diagram for visualizing data transfers between nodes",
-      "registryDependencies": ["@bklit/utils"],
+      "registryDependencies": [
+        "@bklit/chart-animation",
+        "@bklit/utils"
+      ],
       "dependencies": [
         "@visx/gradient@4.0.1-alpha.0",
         "@visx/pattern@4.0.1-alpha.0",
@@ -857,8 +948,13 @@
       "type": "registry:example",
       "title": "Pie Chart Example",
       "description": "Composable pie-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/pie-chart"],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "registryDependencies": [
+        "@bklit/pie-chart"
+      ],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/pie-chart.tsx",
@@ -877,8 +973,13 @@
       "type": "registry:example",
       "title": "Gauge Chart Example",
       "description": "Composable gauge-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/gauge-chart"],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "registryDependencies": [
+        "@bklit/gauge-chart"
+      ],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/gauge-chart.tsx",
@@ -897,8 +998,13 @@
       "type": "registry:example",
       "title": "Ring Chart Example",
       "description": "Composable ring-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/ring-chart"],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "registryDependencies": [
+        "@bklit/ring-chart"
+      ],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/ring-chart.tsx",
@@ -917,8 +1023,13 @@
       "type": "registry:example",
       "title": "Radar Chart Example",
       "description": "Composable radar-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/radar-chart"],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "registryDependencies": [
+        "@bklit/radar-chart"
+      ],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/radar-chart.tsx",
@@ -966,8 +1077,13 @@
       "type": "registry:example",
       "title": "Funnel Chart Example",
       "description": "Composable funnel-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/funnel-chart"],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "registryDependencies": [
+        "@bklit/funnel-chart"
+      ],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/funnel-chart.tsx",
@@ -986,7 +1102,9 @@
       "type": "registry:example",
       "title": "Sankey Chart Example",
       "description": "Composable sankey-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/sankey-chart"],
+      "registryDependencies": [
+        "@bklit/sankey-chart"
+      ],
       "dependencies": [
         "@visx/sankey@4.0.1-alpha.0",
         "@visx/shape@4.0.1-alpha.0",
@@ -1017,7 +1135,10 @@
         "@bklit/y-axis",
         "@bklit/chart-tooltip"
       ],
-      "dependencies": ["@visx/shape@4.0.1-alpha.0", "motion"],
+      "dependencies": [
+        "@visx/shape@4.0.1-alpha.0",
+        "motion"
+      ],
       "files": [
         {
           "path": "registry/examples/candlestick-chart.tsx",
@@ -1036,8 +1157,14 @@
       "type": "registry:example",
       "title": "Choropleth Chart Example",
       "description": "Composable choropleth-chart demo for Open in v0",
-      "registryDependencies": ["@bklit/choropleth-chart"],
-      "dependencies": ["@visx/geo@4.0.1-alpha.0", "d3-geo", "topojson-client"],
+      "registryDependencies": [
+        "@bklit/choropleth-chart"
+      ],
+      "dependencies": [
+        "@visx/geo@4.0.1-alpha.0",
+        "d3-geo",
+        "topojson-client"
+      ],
       "files": [
         {
           "path": "registry/examples/choropleth-chart.tsx",

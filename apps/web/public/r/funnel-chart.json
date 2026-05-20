@@ -8,6 +8,7 @@
     "motion"
   ],
   "registryDependencies": [
+    "@bklit/chart-animation",
     "@bklit/utils"
   ],
   "files": [
