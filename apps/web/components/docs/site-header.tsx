@@ -388,7 +388,7 @@ export function SiteHeader({
 
           <div className="flex items-center gap-1">
             <DocsSearchTrigger
-              className="hidden w-44 justify-between md:inline-flex"
+              className="hidden w-30 justify-between md:inline-flex"
               hideIfDisabled
             />
             {githubUrl && (
