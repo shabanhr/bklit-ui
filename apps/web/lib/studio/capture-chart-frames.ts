@@ -8,6 +8,7 @@ import {
   createRecordingPauseState,
   getRecordingElapsedMs,
 } from "./studio-recording-clock";
+import { readElementBackgroundColor } from "./studio-recording-color";
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -48,6 +49,7 @@ async function captureElementFrame(
     width,
     height,
     scale: getStudioRecordingCaptureScale(),
+    backgroundColor: readElementBackgroundColor(element),
   });
   return canvasToPngBlob(canvas);
 }
@@ -62,6 +64,7 @@ export interface CaptureChartFramesOptions {
   signal?: AbortSignal;
   onProgress?: (progress: number) => void;
   isPaused?: () => boolean;
+  onCaptureReady?: () => void;
 }
 
 /**
@@ -82,6 +85,7 @@ export async function captureChartFrames(
     signal,
     onProgress,
     isPaused = () => false,
+    onCaptureReady,
   } = options;
 
   if (signal?.aborted) {
@@ -94,6 +98,7 @@ export async function captureChartFrames(
   const pauseState = createRecordingPauseState();
   let capturing = false;
   let replayFired = false;
+  onCaptureReady?.();
 
   while (true) {
     if (signal?.aborted) {

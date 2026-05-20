@@ -367,7 +367,9 @@ const radarConfig: StudioChartConfig = {
   controls: [],
   controlGroups: radarChartControlGroups,
   render: (state, ctx) => {
-    const motionEnter = getStudioMotionEnterProps(state);
+    const motionEnter = getStudioMotionEnterProps(state, {
+      linear: ctx.isRecording,
+    });
     return (
       <StudioRadialCenter frame={ctx.frame}>
         <RadarChart

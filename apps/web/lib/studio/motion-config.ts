@@ -193,8 +193,19 @@ export function motionSignature(state: MotionStateSlice): string {
   return `e-${duration}-${state.motionEase}-${bezier}`;
 }
 
-export function studioMotionToTransition(state: MotionStateSlice): Transition {
+export function studioMotionToTransition(
+  state: MotionStateSlice,
+  options?: { linear?: boolean }
+): Transition {
   const duration = clampMotionDuration(state.motionDuration);
+
+  if (options?.linear) {
+    return {
+      type: "tween",
+      duration,
+      ease: "linear",
+    };
+  }
 
   if (state.motionType === "ease") {
     return {

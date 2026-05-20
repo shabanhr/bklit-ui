@@ -6,6 +6,7 @@ import {
 } from "@/components/studio/studio-capture-composition";
 import {
   framesForNativeTimeline,
+  type StudioRecordingFormat,
   type StudioRecordingTimeline,
   type TimestampedFrame,
 } from "./studio-recording";
@@ -13,6 +14,7 @@ import {
 export interface EncodeStudioRecordingOptions {
   frames: TimestampedFrame[];
   timeline: StudioRecordingTimeline;
+  format: StudioRecordingFormat;
   width: number;
   height: number;
   chartSlug: string;
@@ -33,8 +35,16 @@ function downloadBlob(blob: Blob, filename: string) {
 export async function encodeStudioRecording(
   options: EncodeStudioRecordingOptions
 ): Promise<void> {
-  const { frames, timeline, width, height, chartSlug, onProgress, signal } =
-    options;
+  const {
+    frames,
+    timeline,
+    format,
+    width,
+    height,
+    chartSlug,
+    onProgress,
+    signal,
+  } = options;
 
   if (frames.length === 0) {
     throw new Error("No frames captured");
@@ -70,9 +80,12 @@ export async function encodeStudioRecording(
         defaultProps: inputProps as unknown as Record<string, unknown>,
       },
       inputProps: inputProps as unknown as Record<string, unknown>,
+      container: format === "webm" ? "webm" : "mp4",
+      videoCodec: format === "webm" ? "vp9" : "h264",
       muted: true,
       videoBitrate: "very-high",
-      hardwareAcceleration: "prefer-hardware",
+      hardwareAcceleration:
+        format === "webm" ? "prefer-hardware" : "prefer-software",
       keyframeIntervalInSeconds: 2,
       signal,
       onProgress: ({ progress }) => {
@@ -82,7 +95,8 @@ export async function encodeStudioRecording(
 
     const blob = await getBlob();
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadBlob(blob, `bklit-studio-${chartSlug}-${timestamp}.mp4`);
+    const extension = format === "webm" ? "webm" : "mp4";
+    downloadBlob(blob, `bklit-studio-${chartSlug}-${timestamp}.${extension}`);
   } finally {
     for (const url of frameUrls) {
       URL.revokeObjectURL(url);

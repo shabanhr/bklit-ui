@@ -1,8 +1,12 @@
-import type { StudioRecordingTimeline } from "./studio-recording";
+import type {
+  StudioRecordingFormat,
+  StudioRecordingTimeline,
+} from "./studio-recording";
 import {
   createRecordingPauseState,
   getRecordingElapsedMs,
 } from "./studio-recording-clock";
+import { transcodeRecordingToMp4 } from "./transcode-recording-to-mp4";
 
 type CropTargetHandle = object;
 
@@ -28,12 +32,12 @@ export function canRecordChartStream(): boolean {
   );
 }
 
+/** WebM only — Chrome MP4 MediaRecorder freezes tab/region capture; MP4 comes from transcode. */
 function pickRecorderMimeType(): string {
   const candidates = [
     "video/webm;codecs=vp9",
     "video/webm;codecs=vp8",
     "video/webm",
-    "video/mp4",
   ];
   return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
 }
@@ -55,12 +59,17 @@ function downloadRecordingBlob(
 export interface RecordChartStreamOptions {
   element: HTMLElement;
   timeline: StudioRecordingTimeline;
+  format: StudioRecordingFormat;
   chartSlug: string;
   onReplay: () => void;
   onTimelineTick?: (elapsedMs: number) => void;
   signal?: AbortSignal;
   onProgress?: (progress: number) => void;
   isPaused?: () => boolean;
+  /** Called once the display stream is cropped and capture is about to begin. */
+  onCaptureReady?: () => void;
+  /** Called when WebM capture finished and MP4 transcode begins. */
+  onEncodingStart?: () => void;
 }
 
 /**
@@ -74,12 +83,15 @@ export async function recordChartStream(
   const {
     element,
     timeline,
+    format,
     chartSlug,
     onReplay,
     onTimelineTick,
     signal,
     onProgress,
     isPaused = () => false,
+    onCaptureReady,
+    onEncodingStart,
   } = options;
 
   if (!canRecordChartStream()) {
@@ -118,6 +130,7 @@ export async function recordChartStream(
   }
 
   await croppable.cropTo(cropTarget);
+  onCaptureReady?.();
 
   const recorder = new MediaRecorder(stream, {
     mimeType,
@@ -205,8 +218,27 @@ export async function recordChartStream(
     if (blob.size === 0) {
       throw new Error("Recording produced no video data.");
     }
-    const extension = mimeType.includes("mp4") ? "mp4" : "webm";
-    downloadRecordingBlob(blob, chartSlug, extension);
+
+    if (format === "webm") {
+      downloadRecordingBlob(blob, chartSlug, "webm");
+      onProgress?.(1);
+      return;
+    }
+
+    onEncodingStart?.();
+    const mp4 = await transcodeRecordingToMp4({
+      blob,
+      signal,
+      onProgress: (encodeProgress) => {
+        onProgress?.(0.85 + encodeProgress * 0.15);
+      },
+    });
+
+    if (aborted || signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+
+    downloadRecordingBlob(mp4, chartSlug, "mp4");
     onProgress?.(1);
   } catch (caught) {
     if (caught instanceof DOMException && caught.name === "NotAllowedError") {

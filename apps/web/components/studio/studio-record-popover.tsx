@@ -3,15 +3,19 @@
 import { VideoCameraIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   STUDIO_RECORDING_ASPECT_OPTIONS,
+  STUDIO_RECORDING_FORMAT_OPTIONS,
   STUDIO_RECORDING_INTERACTION_OPTIONS,
   type StudioRecordingAspect,
+  type StudioRecordingFormat,
   type StudioRecordingInteractionMs,
 } from "@/lib/studio/studio-recording";
 import { cn } from "@/lib/utils";
@@ -26,7 +30,8 @@ export function StudioRecordPopover({
   isRecording: boolean;
   onStart: (
     interactionMs: StudioRecordingInteractionMs,
-    aspect: StudioRecordingAspect
+    aspect: StudioRecordingAspect,
+    format: StudioRecordingFormat
   ) => void;
   onStop: () => void;
 }) {
@@ -34,6 +39,7 @@ export function StudioRecordPopover({
   const [interactionMs, setInteractionMs] =
     useState<StudioRecordingInteractionMs>(5000);
   const [aspect, setAspect] = useState<StudioRecordingAspect>("16:9");
+  const [format, setFormat] = useState<StudioRecordingFormat>("webm");
 
   if (isRecording) {
     return (
@@ -131,11 +137,37 @@ export function StudioRecordPopover({
           </div>
         </div>
 
+        <div className="mt-4">
+          <p className="mb-2 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
+            Export format
+          </p>
+          <RadioGroup
+            className="flex flex-row items-center gap-4"
+            onValueChange={(value) => setFormat(value as StudioRecordingFormat)}
+            value={format}
+          >
+            {STUDIO_RECORDING_FORMAT_OPTIONS.map((opt) => (
+              <div className="flex items-center gap-2" key={opt.value}>
+                <RadioGroupItem
+                  id={`studio-format-${opt.value}`}
+                  value={opt.value}
+                />
+                <Label
+                  className="cursor-pointer font-normal text-xs"
+                  htmlFor={`studio-format-${opt.value}`}
+                >
+                  {opt.label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+
         <Button
           className="mt-4 w-full"
           onClick={() => {
             setOpen(false);
-            onStart(interactionMs, aspect);
+            onStart(interactionMs, aspect, format);
           }}
           type="button"
         >

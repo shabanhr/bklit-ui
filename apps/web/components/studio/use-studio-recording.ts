@@ -11,6 +11,7 @@ import type { StudioUrlState } from "@/lib/studio/studio-parsers";
 import {
   getStudioRecordingOutputSize,
   getStudioRecordingTimeline,
+  type StudioRecordingFormat,
   type StudioRecordingInteractionMs,
   type StudioRecordingTimeline,
 } from "@/lib/studio/studio-recording";
@@ -26,6 +27,7 @@ export interface StartStudioRecordingParams {
   chart: ChartSlug;
   replay: () => void;
   interactionMs?: StudioRecordingInteractionMs;
+  format?: StudioRecordingFormat;
   onFinished?: () => void;
 }
 
@@ -74,6 +76,7 @@ export function useStudioRecording() {
         chart,
         replay,
         interactionMs = 0,
+        format = "webm",
         onFinished,
       } = params;
 
@@ -93,21 +96,24 @@ export function useStudioRecording() {
       setElapsedMs(0);
       isPausedRef.current = false;
       setIsPaused(false);
-      setPhase("capturing");
 
       const useStream = canRecordChartStream();
+      const onCaptureReady = () => setPhase("capturing");
 
       try {
         if (useStream) {
           await recordChartStream({
             element,
             timeline: recordingTimeline,
+            format,
             chartSlug: chart,
             onReplay: replay,
             onTimelineTick: setElapsedMs,
             signal: controller.signal,
             onProgress: setProgress,
             isPaused: () => isPausedRef.current,
+            onCaptureReady,
+            onEncodingStart: () => setPhase("encoding"),
           });
         } else {
           const frames = await captureChartFrames({
@@ -119,6 +125,7 @@ export function useStudioRecording() {
             onTimelineTick: setElapsedMs,
             signal: controller.signal,
             isPaused: () => isPausedRef.current,
+            onCaptureReady,
             onProgress: (captureProgress) => {
               setProgress(captureProgress * 0.7);
             },
@@ -136,6 +143,7 @@ export function useStudioRecording() {
           await encodeStudioRecording({
             frames,
             timeline: recordingTimeline,
+            format,
             width: outputSize.width,
             height: outputSize.height,
             chartSlug: chart,
