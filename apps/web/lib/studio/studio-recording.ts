@@ -14,12 +14,18 @@ export const STUDIO_RECORDING_INTERACTION_OPTIONS = [
   { value: 0, label: "None" },
   { value: 5000, label: "5 seconds" },
   { value: 10_000, label: "10 seconds" },
-  { value: 15_000, label: "15 seconds" },
-  { value: 30_000, label: "30 seconds" },
 ] as const;
 
 export type StudioRecordingInteractionMs =
   (typeof STUDIO_RECORDING_INTERACTION_OPTIONS)[number]["value"];
+
+export const STUDIO_RECORDING_FORMAT_OPTIONS = [
+  { value: "webm" as const, label: "WebM" },
+  { value: "mp4" as const, label: "MP4" },
+] as const;
+
+export type StudioRecordingFormat =
+  (typeof STUDIO_RECORDING_FORMAT_OPTIONS)[number]["value"];
 
 export const STUDIO_RECORDING_ASPECT_OPTIONS = [
   { value: "frame" as const, label: "Current frame" },

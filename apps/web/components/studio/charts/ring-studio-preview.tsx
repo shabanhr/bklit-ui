@@ -20,7 +20,9 @@ export function RingStudioPreview({
   state: StudioUrlState;
   ctx: StudioRenderContext;
 }) {
-  const motionEnter = getStudioMotionEnterProps(state);
+  const motionEnter = getStudioMotionEnterProps(state, {
+    linear: ctx.isRecording,
+  });
 
   return (
     <StudioRadialCenter frame={ctx.frame}>

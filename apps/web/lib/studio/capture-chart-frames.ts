@@ -8,6 +8,7 @@ import {
   createRecordingPauseState,
   getRecordingElapsedMs,
 } from "./studio-recording-clock";
+import { readElementBackgroundColor } from "./studio-recording-color";
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -48,6 +49,7 @@ async function captureElementFrame(
     width,
     height,
     scale: getStudioRecordingCaptureScale(),
+    backgroundColor: readElementBackgroundColor(element),
   });
   return canvasToPngBlob(canvas);
 }

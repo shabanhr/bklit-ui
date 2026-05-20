@@ -1,7 +1,7 @@
 "use client";
 
 import { PauseIcon, PlayIcon } from "@heroicons/react/24/outline";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -112,7 +112,6 @@ export function StudioRecordingTimeline({
   onPause?: () => void;
   onResume?: () => void;
 }) {
-  const reducedMotion = useReducedMotion();
   const progress = Math.min(1, elapsedMs / timeline.totalMs);
   const markers = useMemo(
     () => getStudioRecordingMarkers(timeline),
@@ -228,15 +227,9 @@ export function StudioRecordingTimeline({
         </motion.div>
 
         <motion.div className="relative space-y-1.5">
-          <motion.div
-            animate={{ left: `${progress * 100}%` }}
+          <div
             className="pointer-events-none absolute top-0 bottom-0 z-20 w-px bg-foreground/85"
-            initial={false}
-            transition={
-              reducedMotion
-                ? { duration: 0 }
-                : { type: "spring", stiffness: 140, damping: 22 }
-            }
+            style={{ left: `${progress * 100}%` }}
           />
 
           {tracks.map((track) => (
@@ -250,12 +243,12 @@ export function StudioRecordingTimeline({
           ))}
         </motion.div>
 
-        <motion.div className="mt-3 h-1 overflow-hidden rounded-full bg-muted/30">
-          <motion.div
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted/30">
+          <div
             className="h-full bg-foreground/80"
             style={{ width: `${progress * 100}%` }}
           />
-        </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );

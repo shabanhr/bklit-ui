@@ -23,6 +23,7 @@ import {
   getRecordingCaptureDimensions,
   STUDIO_RECORDING_CAPTURE_INSET_PX,
   type StudioRecordingAspect,
+  type StudioRecordingFormat,
   type StudioRecordingInteractionMs,
 } from "@/lib/studio/studio-recording";
 import { cn } from "@/lib/utils";
@@ -84,7 +85,8 @@ export function StudioPreview() {
   const handleStartRecording = useCallback(
     async (
       interactionMs: StudioRecordingInteractionMs,
-      aspect: StudioRecordingAspect
+      aspect: StudioRecordingAspect,
+      format: StudioRecordingFormat
     ) => {
       const element = recordCaptureRef.current;
       if (!element) {
@@ -121,6 +123,7 @@ export function StudioPreview() {
           chart: state.chart,
           replay,
           interactionMs,
+          format,
           onFinished: () => {
             const previous = frameSizeBeforeRecording.current;
             if (previous) {
@@ -266,6 +269,7 @@ export function StudioPreview() {
                       {(frame) => {
                         const renderCtx: StudioRenderContext = {
                           animationKey,
+                          isRecording: isRecording || capturePrepared,
                           motionRemountKey,
                           committedState: state,
                           motionCurveDragging,

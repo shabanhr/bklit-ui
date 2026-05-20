@@ -24,7 +24,9 @@ export function GaugeStudioPreview({
   ctx: StudioRenderContext;
 }) {
   const { width, height } = studioFitAspectSize(ctx.frame, 21 / 16);
-  const motionEnter = getStudioMotionEnterProps(state);
+  const motionEnter = getStudioMotionEnterProps(state, {
+    linear: ctx.isRecording,
+  });
 
   return (
     <Gauge

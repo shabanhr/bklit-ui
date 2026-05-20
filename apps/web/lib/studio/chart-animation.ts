@@ -48,16 +48,17 @@ export function studioEnterStaggerScale(state: StudioUrlState): number {
 
 export function getStudioCssRevealProps(
   state: StudioUrlState,
-  options?: { revealFrom?: StudioUrlState }
+  options?: { revealFrom?: StudioUrlState; linear?: boolean }
 ) {
   const motion = motionSliceFromState(state);
   const revealMotion = options?.revealFrom
     ? motionSliceFromState(options.revealFrom)
     : motion;
+  const linear = options?.linear ?? false;
   return {
     animationDuration: studioAnimationDurationMs(state),
-    animationEasing: studioAnimationEasingCss(motion),
-    enterTransition: studioMotionToTransition(motion),
+    animationEasing: linear ? "linear" : studioAnimationEasingCss(motion),
+    enterTransition: studioMotionToTransition(motion, { linear }),
     revealSignature: motionSignature(revealMotion),
   };
 }
@@ -65,12 +66,15 @@ export function getStudioCssRevealProps(
 /** CSS reveal props for studio preview (live easing, stable reveal while dragging handles). */
 export function getStudioCssRevealPropsForPreview(
   displayState: StudioUrlState,
-  ctx: Pick<StudioRenderContext, "motionCurveDragging" | "committedState">
+  ctx: Pick<
+    StudioRenderContext,
+    "motionCurveDragging" | "committedState" | "isRecording"
+  >
 ) {
-  return getStudioCssRevealProps(
-    displayState,
-    ctx.motionCurveDragging ? { revealFrom: ctx.committedState } : undefined
-  );
+  return getStudioCssRevealProps(displayState, {
+    revealFrom: ctx.motionCurveDragging ? ctx.committedState : undefined,
+    linear: ctx.isRecording,
+  });
 }
 
 /** Chart remount key: manual replay + debounced motion signature. */
@@ -79,12 +83,17 @@ export function studioPreviewChartKey(ctx: StudioRenderContext): string {
 }
 
 /** Motion enter props for charts with spring/tween slice enter (gauge, pie, ring, funnel). */
-export function getStudioMotionEnterProps(state: StudioUrlState): {
+export function getStudioMotionEnterProps(
+  state: StudioUrlState,
+  options?: { linear?: boolean }
+): {
   enterTransition: Transition;
   enterStaggerScale: number;
 } {
   return {
-    enterTransition: studioMotionToTransition(motionSliceFromState(state)),
+    enterTransition: studioMotionToTransition(motionSliceFromState(state), {
+      linear: options?.linear,
+    }),
     enterStaggerScale: studioEnterStaggerScale(state),
   };
 }
